@@ -39,13 +39,24 @@ A modern, web-based tool for interactive, paragraph-by-paragraph spot-checking a
 
 ## 💻 Windows Setup & One-Click Launch
 
+### Prerequisites (Installing Python via winget)
+If Python is not yet installed on your Windows system, open **Command Prompt** or **PowerShell** and run:
+
+```cmd
+winget install -e --id Python.Python.3.13
+```
+
+*(Note: After installation finishes, close and reopen your terminal window so system PATH updates take effect).*
+
+---
+
 ### Option A: One-Click Batch Script (Recommended for Windows)
 1. Download or clone this repository to your computer.
 2. Double-click **`run_windows.bat`**.
    *(This script automatically checks for Python, creates a virtual environment, installs all required packages, and launches the app via Waitress WSGI!)*
 3. Open your web browser to **`http://127.0.0.1:5000`**.
 
-### Option B: PowerShell
+### Option B: PowerShell Launcher
 ```powershell
 .\run_windows.ps1
 ```
