@@ -58,8 +58,15 @@ pip install -r requirements.txt
 ```
 
 ### 5. Run the Application
+
+#### Development Mode
 ```bash
 python app.py
+```
+
+#### Production Mode (Gunicorn)
+```bash
+gunicorn -c gunicorn.conf.py wsgi:app
 ```
 Open your browser and navigate to **`http://127.0.0.1:5000`**.
 
@@ -68,10 +75,14 @@ Open your browser and navigate to **`http://127.0.0.1:5000`**.
 ## 🛠️ Project Structure
 
 ```
-local-translator/
+local-translation-app/
 ├── app.py                  # Flask backend & ArgoTranslate translation API endpoints
+├── wsgi.py                 # Production WSGI application entrypoint
+├── gunicorn.conf.py        # Production Gunicorn server configuration
+├── static/
+│   └── style.css           # Modular stylesheet and design system
 ├── templates/
-│   └── index.html          # Web UI, CSS styles, interactive spot-check frontend logic
+│   └── index.html          # Web UI & interactive spot-check frontend logic
 ├── requirements.txt        # Python dependencies
 ├── .gitignore              # Git ignore configuration
 ├── LICENSE                 # MIT License
