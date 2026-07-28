@@ -31,10 +31,40 @@ def setup_translation_model():
             print("Model installed!")
 
 def split_into_paragraphs(text):
-    """Splits raw text into paragraphs based on line breaks."""
+    """
+    Splits raw text into distinct paragraphs based on line breaks, PDF page output, 
+    and punctuation boundaries.
+    """
+    if not text:
+        return []
+
+    # Normalize carriage returns and line endings
     normalized = text.replace('\r\n', '\n').replace('\r', '\n')
-    paragraphs = [p.strip() for p in normalized.split('\n\n') if p.strip()]
-    return paragraphs if paragraphs else [normalized.strip()]
+
+    # Convert single newlines following sentence terminators into double newlines
+    normalized = re.sub(r'(?<=[.!?»”"])\n+(?=[A-ZÄÖÜ0-9"»“])', '\n\n', normalized)
+
+    # Split on double or multiple newlines
+    raw_paragraphs = [p.strip() for p in re.split(r'\n\s*\n', normalized) if p.strip()]
+
+    clean_paragraphs = []
+    for p in raw_paragraphs:
+        # Replace soft single line breaks inside a paragraph with a single space
+        single_line = re.sub(r'(?<!\n)\n(?!\n)', ' ', p)
+        single_line = re.sub(r'\s+', ' ', single_line).strip()
+        if single_line:
+            clean_paragraphs.append(single_line)
+
+    # Fallback for dense text/PDFs with no paragraph breaks: split every 3 sentences into a paragraph
+    if len(clean_paragraphs) <= 1 and clean_paragraphs:
+        full_text = clean_paragraphs[0]
+        sentences = split_paragraph_into_sentences(full_text)
+        if len(sentences) > 3:
+            clean_paragraphs = []
+            for i in range(0, len(sentences), 3):
+                clean_paragraphs.append(" ".join(sentences[i:i+3]))
+
+    return clean_paragraphs if clean_paragraphs else [text.strip()]
 
 def split_paragraph_into_sentences(text):
     """
@@ -125,7 +155,11 @@ def upload_file():
             extracted_text = uploaded_file.read().decode("utf-8", errors="ignore")
         elif filename.endswith(".pdf"):
             pdf_reader = PdfReader(uploaded_file)
-            page_texts = [page.extract_text() for page in pdf_reader.pages if page.extract_text()]
+            page_texts = []
+            for page in pdf_reader.pages:
+                txt = page.extract_text()
+                if txt and txt.strip():
+                    page_texts.append(txt.strip())
             extracted_text = "\n\n".join(page_texts)
         else:
             return jsonify({"error": "Please upload a .txt or .pdf file."}), 400
