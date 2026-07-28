@@ -344,7 +344,8 @@
                     if (currentSelectionMode === 'sentence') {
                         // Sentence Mode Rendering
                         const span = document.createElement('span');
-                        span.className = 'selectable-unit';
+                        const isSentenceModified = !!sentencePair.isModified;
+                        span.className = 'selectable-unit' + (isSentenceModified ? ' unit-modified' : '');
                         span.textContent = sentencePair.translated + ' ';
                         span.onclick = () => editSentence(span, currentChunkIndex, pIdx, sIdx);
                         p.appendChild(span);
@@ -356,7 +357,8 @@
                                 p.appendChild(document.createTextNode(wordToken)); // Standard space
                             } else {
                                 const wordSpan = document.createElement('span');
-                                wordSpan.className = 'selectable-unit';
+                                const isWordModified = (sentencePair.modifiedWords && sentencePair.modifiedWords[wIdx]) || (sentencePair.isModified && !sentencePair.modifiedWords);
+                                wordSpan.className = 'selectable-unit' + (isWordModified ? ' unit-modified' : '');
                                 wordSpan.textContent = wordToken;
                                 wordSpan.onclick = () => editWord(wordSpan, currentChunkIndex, pIdx, sIdx, words, wIdx);
                                 p.appendChild(wordSpan);
@@ -375,7 +377,8 @@
 
         // 5. Edit Whole Sentence
         function editSentence(element, cIdx, pIdx, sIdx) {
-            const currentText = chunksData[cIdx].paragraphs[pIdx][sIdx].translated;
+            const sentenceObj = chunksData[cIdx].paragraphs[pIdx][sIdx];
+            const currentText = sentenceObj.translated;
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'editable-unit';
@@ -384,7 +387,12 @@
 
             function save() {
                 const val = input.value.trim();
-                if (val) chunksData[cIdx].paragraphs[pIdx][sIdx].translated = val;
+                if (val) {
+                    if (val !== currentText) {
+                        sentenceObj.translated = val;
+                        sentenceObj.isModified = true;
+                    }
+                }
                 renderCurrentChunk();
             }
 
@@ -397,6 +405,7 @@
         // 6. Edit Single Word
         function editWord(element, cIdx, pIdx, sIdx, wordsArray, wIdx) {
             const currentWord = wordsArray[wIdx];
+            const sentenceObj = chunksData[cIdx].paragraphs[pIdx][sIdx];
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'editable-unit';
@@ -406,9 +415,13 @@
             function save() {
                 const val = input.value.trim();
                 if (val) {
-                    wordsArray[wIdx] = val;
-                    // Reassemble words into complete sentence
-                    chunksData[cIdx].paragraphs[pIdx][sIdx].translated = wordsArray.join('');
+                    if (val !== currentWord) {
+                        wordsArray[wIdx] = val;
+                        sentenceObj.translated = wordsArray.join('');
+                        sentenceObj.isModified = true;
+                        if (!sentenceObj.modifiedWords) sentenceObj.modifiedWords = {};
+                        sentenceObj.modifiedWords[wIdx] = true;
+                    }
                 }
                 renderCurrentChunk();
             }
