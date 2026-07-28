@@ -657,6 +657,10 @@ textarea::-webkit-scrollbar-thumb:hover {
     flex-wrap: wrap;
 }
 
+.stepper-btn-group-right {
+    margin-left: auto;
+}
+
 .stepper-info { 
     font-weight: 600; 
     color: var(--md-sys-color-on-surface); 
@@ -908,6 +912,10 @@ textarea::-webkit-scrollbar-thumb:hover {
         align-items: stretch;
     }
     .stepper-btn-group {
+        justify-content: center;
+    }
+    .stepper-btn-group-right {
+        margin-left: 0;
         justify-content: center;
     }
     .stepper-info {
