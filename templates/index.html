@@ -429,25 +429,20 @@
                         p.appendChild(span);
                     } else {
                         // Word Mode Rendering
-                        const words = sentencePair.translated.split(/(\s+)/); // Keep spaces
                         const diffTokens = (sentencePair.isModified && sentencePair.initialTranslation && sentencePair.translated !== sentencePair.initialTranslation)
                             ? computeWordDiff(sentencePair.initialTranslation, sentencePair.translated)
-                            : null;
+                            : sentencePair.translated.split(/(\s+)/).map(t => ({ token: t, isNew: false }));
 
-                        words.forEach((wordToken, wIdx) => {
+                        diffTokens.forEach((tokenObj, tIdx) => {
+                            const wordToken = tokenObj.token;
                             if (wordToken.trim().length === 0) {
                                 p.appendChild(document.createTextNode(wordToken)); // Standard space
                             } else {
                                 const wordSpan = document.createElement('span');
-                                let isWordModified = false;
-                                if (diffTokens && diffTokens[wIdx]) {
-                                    isWordModified = diffTokens[wIdx].isNew;
-                                } else if (sentencePair.modifiedWords && sentencePair.modifiedWords[wIdx]) {
-                                    isWordModified = true;
-                                }
+                                const isWordModified = !!tokenObj.isNew;
                                 wordSpan.className = 'selectable-unit' + (isWordModified ? ' unit-modified' : '');
                                 wordSpan.textContent = wordToken;
-                                wordSpan.onclick = () => editWord(wordSpan, currentChunkIndex, pIdx, sIdx, words, wIdx);
+                                wordSpan.onclick = () => editWord(wordSpan, currentChunkIndex, pIdx, sIdx, diffTokens.map(t => t.token), tIdx);
                                 p.appendChild(wordSpan);
                             }
                         });
