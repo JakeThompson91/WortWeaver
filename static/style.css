@@ -150,7 +150,7 @@ textarea:focus {
     border: 1px solid var(--border-color); 
     border-radius: var(--radius-sm); 
     padding: 1.1rem; 
-    min-height: 250px; 
+    min-height: 480px; 
     height: auto;
     overflow: visible;
     flex-grow: 1;
