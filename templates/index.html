@@ -211,6 +211,13 @@
             document.getElementById('spotCheckWorkspace').style.display = 'none';
             hideWarningAlert();
 
+            // Clear raw text entry box and reset session state
+            document.getElementById('rawSourceText').value = '';
+            chunksData = [];
+            approvalState = {};
+            flagState = {};
+            currentChunkIndex = 0;
+
             document.getElementById('uploadSection').style.display = 'block';
             document.getElementById('rawInputGrid').style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
