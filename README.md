@@ -35,39 +35,54 @@ A modern, web-based tool for interactive, paragraph-by-paragraph spot-checking a
 
 ---
 
-## 🚀 Quick Start
+---
 
-### 1. Prerequisites
-Ensure you have Python 3.8 or higher installed on your system.
+## 💻 Windows Setup & One-Click Launch
 
-### 2. Clone Repository
+### Option A: One-Click Batch Script (Recommended for Windows)
+1. Download or clone this repository to your computer.
+2. Double-click **`run_windows.bat`**.
+   *(This script automatically checks for Python, creates a virtual environment, installs all required packages, and launches the app via Waitress WSGI!)*
+3. Open your web browser to **`http://127.0.0.1:5000`**.
+
+### Option B: PowerShell
+```powershell
+.\run_windows.ps1
+```
+
+### Option C: Manual Command Prompt / Windows Setup
+```cmd
+:: 1. Create Virtual Environment
+python -m venv venv
+
+:: 2. Activate Virtual Environment
+venv\Scripts\activate
+
+:: 3. Install Dependencies (Includes Waitress for native Windows production WSGI)
+pip install -r requirements.txt
+
+:: 4. Launch WortWeaver Server
+python run_app.py
+```
+
+---
+
+## 🐧 Linux / macOS Quick Start
+
+### 1. Clone & Setup
 ```bash
 git clone https://github.com/JakeThompson91/local-translation-app.git
 cd local-translation-app
-```
 
-### 3. Create & Activate Virtual Environment
-```bash
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### 4. Install Dependencies
-```bash
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 5. Run the Application
+### 2. Run Application
+- **Standard Launcher (Waitress / Dev)**: `python run_app.py`
+- **Linux Production (Gunicorn)**: `gunicorn -c gunicorn.conf.py wsgi:app`
 
-#### Development Mode
-```bash
-python app.py
-```
-
-#### Production Mode (Gunicorn)
-```bash
-gunicorn -c gunicorn.conf.py wsgi:app
-```
 Open your browser and navigate to **`http://127.0.0.1:5000`**.
 
 ---
@@ -77,13 +92,16 @@ Open your browser and navigate to **`http://127.0.0.1:5000`**.
 ```
 local-translation-app/
 ├── app.py                  # Flask backend & ArgoTranslate translation API endpoints
+├── run_app.py              # Cross-platform launcher (Waitress / Flask)
+├── run_windows.bat         # Windows one-click Command Prompt launcher
+├── run_windows.ps1         # Windows PowerShell launcher
 ├── wsgi.py                 # Production WSGI application entrypoint
-├── gunicorn.conf.py        # Production Gunicorn server configuration
+├── gunicorn.conf.py        # Production Gunicorn server configuration (Linux/macOS)
 ├── static/
 │   └── style.css           # Modular stylesheet and design system
 ├── templates/
 │   └── index.html          # Web UI & interactive spot-check frontend logic
-├── requirements.txt        # Python dependencies
+├── requirements.txt        # Cross-platform Python dependencies
 ├── .gitignore              # Git ignore configuration
 ├── LICENSE                 # MIT License
 └── README.md               # Documentation
