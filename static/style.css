@@ -546,6 +546,13 @@ textarea::-webkit-scrollbar-thumb:hover {
 .btn-teal:hover { 
     background-color: var(--teal-hover); 
 }
+.btn-danger { 
+    background-color: #dc2626; 
+    color: white; 
+}
+.btn-danger:hover { 
+    background-color: #b91c1c; 
+}
 .btn-outline { 
     background-color: transparent; 
     color: #475569; 
