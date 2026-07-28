@@ -302,6 +302,28 @@
         .btn-outline:hover { background-color: #f1f5f9; }
 
         .hint { font-size: 0.82rem; color: #475569; margin-top: 0.6rem; line-height: 1.4; }
+
+        /* Animated Red Warning Alert for Unapproved Downloads */
+        .warning-alert {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 2px solid #f87171;
+            border-radius: 8px;
+            padding: 0.85rem 1.25rem;
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+            animation: flashRed 0.5s ease-in-out 2;
+        }
+
+        @keyframes flashRed {
+            0%, 100% { background: #fef2f2; border-color: #f87171; transform: scale(1); }
+            50% { background: #fee2e2; border-color: #ef4444; transform: scale(1.015); }
+        }
     </style>
 </head>
 <body>
@@ -331,6 +353,9 @@
         <!-- Spot Check Workspace -->
         <div id="spotCheckWorkspace" style="display: none;">
             
+            <!-- Red Warning Alert Prompt -->
+            <div id="warningAlertBox" class="warning-alert" style="display: none;"></div>
+
             <!-- Stepper Navigation -->
             <div class="stepper-bar">
                 <div>
@@ -640,9 +665,63 @@
         function toggleApproveChunk() {
             approvalState[currentChunkIndex] = !approvalState[currentChunkIndex];
             renderCurrentChunk();
+
+            if (chunksData && chunksData.length > 0) {
+                const unapproved = chunksData.filter((_, idx) => !approvalState[idx]);
+                if (unapproved.length === 0) {
+                    hideWarningAlert();
+                }
+            }
         }
 
         function exportFullDocument() {
+            if (!chunksData || chunksData.length === 0) return;
+
+            // 1. Block download unless ALL chunks have been approved
+            const unapprovedChunks = [];
+            for (let i = 0; i < chunksData.length; i++) {
+                if (!approvalState[i]) {
+                    unapprovedChunks.push(i + 1); // 1-indexed chunk number
+                }
+            }
+
+            const alertBox = document.getElementById('warningAlertBox');
+
+            if (unapprovedChunks.length > 0) {
+                // Flash red warning prompt
+                const chunkListStr = unapprovedChunks.map(c => `Chunk ${c}`).join(', ');
+                alertBox.innerHTML = `
+                    <span>⚠️ <strong>Download Blocked:</strong> All chunks must be approved before downloading. Unreviewed: <strong>${chunkListStr}</strong></span>
+                    <button onclick="hideWarningAlert()" style="background:none; border:none; color:#991b1b; font-weight:bold; cursor:pointer; font-size:1.1rem; line-height:1; padding:0 4px;" title="Dismiss alert">✕</button>
+                `;
+                alertBox.style.display = 'flex';
+                
+                // Re-trigger flash animation
+                alertBox.style.animation = 'none';
+                alertBox.offsetHeight; // trigger reflow
+                alertBox.style.animation = 'flashRed 0.5s ease-in-out 2';
+                return;
+            }
+
+            hideWarningAlert();
+
+            // 2. Allow user to provide a custom filename
+            const defaultFilename = 'spotchecked_translation.txt';
+            let userFilename = prompt('All chunks approved! Enter a filename for your download:', defaultFilename);
+
+            if (userFilename === null) {
+                return; // User canceled the prompt
+            }
+
+            userFilename = userFilename.trim();
+            if (!userFilename) {
+                userFilename = defaultFilename;
+            }
+            if (!userFilename.toLowerCase().endsWith('.txt')) {
+                userFilename += '.txt';
+            }
+
+            // Compile full document translation
             let compiled = '';
             chunksData.forEach(chunk => {
                 chunk.paragraphs.forEach(para => {
@@ -653,9 +732,14 @@
             const blob = new Blob([compiled.trim()], { type: 'text/plain;charset=utf-8' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'spotchecked_translation.txt';
+            link.download = userFilename;
             link.click();
             URL.revokeObjectURL(link.href);
+        }
+
+        function hideWarningAlert() {
+            const alertBox = document.getElementById('warningAlertBox');
+            if (alertBox) alertBox.style.display = 'none';
         }
 
         // 8. Hover Word Translation & Floating Tooltip for Original German Panel
