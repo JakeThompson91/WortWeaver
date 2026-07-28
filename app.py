@@ -2,33 +2,16 @@ import re
 import io
 import os
 import logging
-from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template, request, jsonify
 import argostranslate.package
 import argostranslate.translate
 from pypdf import PdfReader
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOG_FILE = os.path.join(BASE_DIR, "wortweaver.log")
-
-# Setup Rotating File Handler for wortweaver.log
-try:
-    file_handler = RotatingFileHandler(LOG_FILE, maxBytes=5*1024*1024, backupCount=2, encoding="utf-8")
-    file_formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s')
-    file_handler.setFormatter(file_formatter)
-except Exception:
-    file_handler = None
-
-LOGGER_NAMES = ['werkzeug', 'waitress', 'app', 'gunicorn.error', 'gunicorn.access']
-if file_handler:
-    for name in LOGGER_NAMES:
-        logger_obj = logging.getLogger(name)
-        logger_obj.addHandler(file_handler)
-        logger_obj.setLevel(logging.ERROR)
+# Suppress HTTP access logging from Werkzeug and Waitress
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+logging.getLogger('waitress').setLevel(logging.ERROR)
 
 app = Flask(__name__)
-if file_handler:
-    app.logger.addHandler(file_handler)
 
 FROM_CODE = "de"
 TO_CODE = "en"
@@ -199,30 +182,6 @@ def upload_file():
 
     except Exception as e:
         return jsonify({"error": f"Failed to read file: {str(e)}"}), 500
-
-is_file_logging_enabled = False
-
-@app.route("/toggle-logging", methods=["POST"])
-def toggle_logging():
-    global is_file_logging_enabled
-    try:
-        data = request.get_json(silent=True) or {}
-        enabled = data.get("enabled", not is_file_logging_enabled)
-        is_file_logging_enabled = bool(enabled)
-        
-        target_level = logging.INFO if is_file_logging_enabled else logging.ERROR
-        for name in LOGGER_NAMES:
-            logging.getLogger(name).setLevel(target_level)
-            
-        status_text = "ENABLED" if is_file_logging_enabled else "DISABLED"
-        logging.getLogger('app').info(f"File logging {status_text} -> outputting to {LOG_FILE}")
-        
-        return jsonify({
-            "logging_enabled": is_file_logging_enabled,
-            "log_file": LOG_FILE
-        })
-    except Exception as e:
-        return jsonify({"error": str(e), "logging_enabled": is_file_logging_enabled}), 500
 
 if __name__ == "__main__":
     setup_translation_model()
