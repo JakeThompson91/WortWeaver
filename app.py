@@ -183,6 +183,26 @@ def upload_file():
     except Exception as e:
         return jsonify({"error": f"Failed to read file: {str(e)}"}), 500
 
+is_debug_logging_enabled = False
+
+@app.route("/toggle-logging", methods=["POST"])
+def toggle_logging():
+    global is_debug_logging_enabled
+    data = request.get_json() or {}
+    enabled = data.get("enabled", not is_debug_logging_enabled)
+    is_debug_logging_enabled = bool(enabled)
+    
+    if is_debug_logging_enabled:
+        logging.getLogger('werkzeug').setLevel(logging.INFO)
+        logging.getLogger('waitress').setLevel(logging.INFO)
+        print("[WortWeaver] Terminal Debug Logging: ENABLED")
+    else:
+        logging.getLogger('werkzeug').setLevel(logging.ERROR)
+        logging.getLogger('waitress').setLevel(logging.ERROR)
+        print("[WortWeaver] Terminal Debug Logging: DISABLED")
+        
+    return jsonify({"logging_enabled": is_debug_logging_enabled})
+
 if __name__ == "__main__":
     setup_translation_model()
     app.run(host="127.0.0.1", port=5000, debug=True)

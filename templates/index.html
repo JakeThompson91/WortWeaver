@@ -8,6 +8,33 @@
 </head>
 <body>
     <div class="container">
+        <!-- Top Right Settings Bar with Hamburger Menu -->
+        <div class="header-top-bar">
+            <button class="hamburger-btn" onclick="toggleHamburgerMenu(event)" id="hamburgerToggleBtn" title="Open WortWeaver Settings">
+                <span>⚙️ Settings</span>
+                <span style="font-size: 0.7rem;">▼</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div class="hamburger-menu" id="hamburgerMenu">
+                <div class="menu-item">
+                    <div class="menu-item-title">
+                        <span>📟 Terminal Logging</span>
+                    </div>
+                    <button class="btn btn-outline" style="padding: 3px 10px; font-size: 0.78rem; min-height: 28px;" onclick="toggleTerminalLogging()" id="loggingToggleBtn">
+                        OFF
+                    </button>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="menu-item" style="font-size: 0.78rem; color: #64748b; flex-direction: column; align-items: flex-start; gap: 4px;">
+                    <div><strong>Keyboard Hotkeys:</strong></div>
+                    <div>• <code>S</code> : Sentence Edit Mode</div>
+                    <div>• <code>W</code> : Single Word Edit Mode</div>
+                    <div>• <code>T</code> : Instant Translate Hover</div>
+                </div>
+            </div>
+        </div>
+
         <header style="text-align: center; margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center;">
             <h1 style="display:flex; align-items:center; justify-content:center; gap:10px; font-size:2.2rem; margin:0 0 0.4rem 0; flex-wrap:wrap;">
                 <span style="background: linear-gradient(135deg, #1d4ed8, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; letter-spacing: -0.5px;">WortWeaver</span>
@@ -132,6 +159,50 @@
         let approvalState = {};
         let flagState = {};
         let currentSelectionMode = 'sentence'; // 'sentence' or 'word'
+        let isLoggingEnabled = false;
+
+        function toggleHamburgerMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('hamburgerMenu');
+            if (menu) menu.classList.toggle('active');
+        }
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('hamburgerMenu');
+            const btn = document.getElementById('hamburgerToggleBtn');
+            if (menu && menu.classList.contains('active') && !menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        });
+
+        async function toggleTerminalLogging() {
+            try {
+                const response = await fetch('/toggle-logging', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: !isLoggingEnabled })
+                });
+                const result = await response.json();
+                isLoggingEnabled = result.logging_enabled;
+
+                const btn = document.getElementById('loggingToggleBtn');
+                if (btn) {
+                    if (isLoggingEnabled) {
+                        btn.textContent = 'ON ✓';
+                        btn.style.background = '#dcfce7';
+                        btn.style.color = '#166534';
+                        btn.style.borderColor = '#86efac';
+                    } else {
+                        btn.textContent = 'OFF';
+                        btn.style.background = 'transparent';
+                        btn.style.color = '#475569';
+                        btn.style.borderColor = '#cbd5e1';
+                    }
+                }
+            } catch (err) {
+                alert('Failed to toggle logging.');
+            }
+        }
 
         // Keyboard Shortcuts for Mode Switching ('s' / 'S' for sentence mode, 'w' / 'W' for word mode)
         document.addEventListener('keydown', (e) => {
