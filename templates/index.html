@@ -453,25 +453,10 @@
             <!-- Red Warning Alert Prompt -->
             <div id="warningAlertBox" class="warning-alert" style="display: none;"></div>
 
-            <!-- Stepper Navigation -->
-            <div class="stepper-bar">
-                <div>
-                    <button class="btn btn-outline" onclick="navigateChunk(-1)" id="prevBtn">← Previous Chunk</button>
-                    <button class="btn btn-outline" onclick="navigateChunk(1)" id="nextBtn">Next Chunk →</button>
-                </div>
-                <div class="stepper-info">
-                    Chunk <span id="currentChunkNum">1</span> of <span id="totalChunksNum">1</span>
-                    <span id="approvalBadge" class="badge">Unreviewed</span>
-                </div>
-                <div>
-                    <button class="btn btn-success" onclick="toggleApproveChunk()" id="approveBtn">✓ Approve Chunk</button>
-                    <button class="btn btn-teal" onclick="approveAllChunks()" id="approveAllBtn" style="margin-left: 0.5rem;" title="Approve all document chunks at once">✓✓ Approve All Chunks</button>
-                    <button class="btn" onclick="exportFullDocument()" style="margin-left: 0.5rem;" id="downloadBtn">Download Full File</button>
-                </div>
-            </div>
-
             <!-- Chunk Quick Jump Pagination Bar -->
             <div class="chunk-pagination-bar" id="chunkPaginationNav"></div>
+
+            <!-- Workspace Panel (Original German & Translated English) -->
             <div class="workspace-grid">
                 <!-- German Source Column -->
                 <div class="panel">
@@ -507,8 +492,25 @@
                 </div>
             </div>
 
+            <!-- Stepper Navigation & Actions (Placed Beneath Workspace Panels) -->
+            <div class="stepper-bar" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                <div>
+                    <button class="btn btn-outline" onclick="navigateChunk(-1)" id="prevBtn">← Previous Chunk</button>
+                    <button class="btn btn-outline" onclick="navigateChunk(1)" id="nextBtn">Next Chunk →</button>
+                </div>
+                <div class="stepper-info">
+                    Chunk <span id="currentChunkNum">1</span> of <span id="totalChunksNum">1</span>
+                    <span id="approvalBadge" class="badge">Unreviewed</span>
+                </div>
+                <div>
+                    <button class="btn btn-success" onclick="toggleApproveChunk()" id="approveBtn">✓ Approve Chunk</button>
+                    <button class="btn btn-teal" onclick="approveAllChunks()" id="approveAllBtn" style="margin-left: 0.5rem;" title="Approve all document chunks at once">✓✓ Approve All Chunks</button>
+                    <button class="btn" onclick="exportFullDocument()" style="margin-left: 0.5rem;" id="downloadBtn">Download Full File</button>
+                </div>
+            </div>
+
             <!-- Workspace Bottom Toolbar -->
-            <div style="margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <button class="btn btn-outline" onclick="resetToRawInput()" title="Return to raw text entry to paste or upload a new document">
                     ← Paste New Text / Start Over
                 </button>
