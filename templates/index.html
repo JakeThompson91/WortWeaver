@@ -183,7 +183,11 @@
                     body: JSON.stringify({ enabled: !isLoggingEnabled })
                 });
                 const result = await response.json();
-                isLoggingEnabled = result.logging_enabled;
+                if (!response.ok || result.error) {
+                    alert('Error toggling logging: ' + (result.error || 'Server error'));
+                    return;
+                }
+                isLoggingEnabled = !!result.logging_enabled;
 
                 const btn = document.getElementById('loggingToggleBtn');
                 if (btn) {
@@ -200,7 +204,7 @@
                     }
                 }
             } catch (err) {
-                alert('Failed to toggle logging.');
+                alert('Failed to toggle logging: ' + err.message);
             }
         }
 
