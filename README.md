@@ -1,4 +1,4 @@
-# Local Translator - Interactive Granular Spot-Checker
+# WortWeaver - Interactive Granular Translation Spot-Checker
 
 A modern, web-based tool for interactive, paragraph-by-paragraph spot-checking and editing of German to English translations using local machine translation models.
 
@@ -42,8 +42,8 @@ Ensure you have Python 3.8 or higher installed on your system.
 
 ### 2. Clone Repository
 ```bash
-git clone https://github.com/your-username/local-translator.git
-cd local-translator
+git clone https://github.com/JakeThompson91/local-translation-app.git
+cd local-translation-app
 ```
 
 ### 3. Create & Activate Virtual Environment

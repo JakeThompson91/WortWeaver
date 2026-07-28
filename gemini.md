@@ -1,7 +1,7 @@
-# Local Translator - Project Context & Developer Guidelines
+# WortWeaver - Project Context & Developer Guidelines
 
 ## 📌 Project Overview
-**Local Translator** is a lightweight, privacy-first web application for interactive German-to-English translation spot-checking. It allows translators to review and refine machine-translated text paragraph-by-paragraph with granular editing controls and instant dictionary hover lookups.
+**WortWeaver** is a lightweight, privacy-first web application for interactive German-to-English translation spot-checking. It allows translators to review and refine machine-translated text paragraph-by-paragraph with granular editing controls and instant dictionary hover lookups.
 
 ---
 
