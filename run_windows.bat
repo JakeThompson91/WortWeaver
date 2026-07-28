@@ -28,7 +28,7 @@ IF "%PY_CMD%"=="" (
     exit /b 1
 )
 
-echo [✓] Using Python command: %PY_CMD%
+echo [OK] Using Python command: %PY_CMD%
 
 :: Create Virtual Environment if it doesn't exist
 IF NOT EXIST "venv" (
