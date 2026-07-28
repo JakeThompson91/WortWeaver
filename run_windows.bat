@@ -1,5 +1,7 @@
 @echo off
 TITLE WortWeaver - Local German-English Spot-Checker
+cd /d "%~dp0"
+
 echo ========================================================
 echo               WortWeaver Windows Launcher
 echo ========================================================

@@ -1,4 +1,6 @@
 # WortWeaver PowerShell Launcher for Windows
+Set-Location -Path $PSScriptRoot
+
 Write-Host "========================================================" -ForegroundColor Cyan
 Write-Host "         WortWeaver PowerShell Launcher for Windows     " -ForegroundColor Cyan
 Write-Host "========================================================" -ForegroundColor Cyan
