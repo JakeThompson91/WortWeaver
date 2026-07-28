@@ -106,15 +106,8 @@
                     <button class="btn btn-warning" onclick="toggleFlagChunk()" id="flagBtn" title="Flag chunk for later re-review">🚩 Flag Chunk</button>
                     <button class="btn btn-teal" onclick="approveAllChunks()" id="approveAllBtn" title="Approve all document chunks at once">✓✓ Approve All Chunks</button>
                     <button class="btn" onclick="exportFullDocument()" id="downloadBtn">Download Full File</button>
+                    <button class="btn btn-outline" onclick="resetToRawInput()" title="Return to raw text entry to paste or upload a new document" id="startOverBtn">← Paste New Text / Start Over</button>
                 </div>
-            </div>
-
-            <!-- Workspace Bottom Toolbar -->
-            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <button class="btn btn-outline" onclick="resetToRawInput()" title="Return to raw text entry to paste or upload a new document">
-                    ← Paste New Text / Start Over
-                </button>
-                <span style="font-size:0.85rem; color:#475569; font-weight: 500;">Spot-check review session in progress</span>
             </div>
         </div>
     </div>
