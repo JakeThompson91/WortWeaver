@@ -4,34 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WortWeaver - Granular Translation Spot-Checker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <header style="text-align: center; margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center;">
-            <h1 style="display:flex; align-items:center; justify-content:center; gap:10px; font-size:2.2rem; margin:0 0 0.4rem 0; flex-wrap:wrap;">
-                <span style="background: linear-gradient(135deg, #1d4ed8, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; letter-spacing: -0.5px;">WortWeaver</span>
-                <span style="font-size:0.8rem; font-weight:700; background:#e0f2fe; color:#0369a1; padding:3px 10px; border-radius:12px; border:1px solid #bae6fd;">German ➔ English</span>
+        <!-- Material Header Hero Card -->
+        <header>
+            <div class="brand-title-group">
+                <div class="brand-logo">
+                    <span class="material-symbols-outlined">translate</span>
+                </div>
+                <h1>
+                    <span class="brand-name">WortWeaver</span>
+                </h1>
+                <span class="lang-chip">
+                    <span class="material-symbols-outlined">swap_horiz</span> German ➔ English
+                </span>
                 <span class="beta-badge">BETA</span>
-            </h1>
-            <p style="text-align: center; max-width: 620px; margin: 0 auto;">Spot-check German translations paragraph by paragraph.</p>
+            </div>
+            <p>Spot-check German translations paragraph by paragraph with granular sentence and word controls.</p>
         </header>
 
-        <!-- Drag & Drop Upload Bar -->
+        <!-- Drag & Drop Upload Card -->
         <div class="upload-section" id="uploadSection" onclick="document.getElementById('fileInput').click()">
-            <span style="font-weight:600; color:#2563eb;">Click to upload a document (.txt, .pdf)</span> or paste text below
+            <div class="upload-icon">
+                <span class="material-symbols-outlined">cloud_upload</span>
+            </div>
+            <div class="upload-text">
+                <strong>Click to upload a document (.txt, .pdf)</strong> or paste text below
+            </div>
             <input type="file" id="fileInput" accept=".txt,.pdf" onchange="handleFileUpload(this.files[0])">
         </div>
 
         <!-- Raw Input Phase -->
-        <div id="rawInputGrid" style="max-width: 980px; margin: 0 auto 1.5rem auto;">
+        <div id="rawInputGrid" style="max-width: 1000px; margin: 0 auto 1.5rem auto;">
             <div class="panel">
                 <div class="panel-header">
-                    <span>Source Text (German)</span>
+                    <div class="panel-title">
+                        <span class="material-symbols-outlined">description</span> Source Text (German)
+                    </div>
                     <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
                         <div style="display: flex; align-items: center; gap: 0.4rem;">
-                            <label for="chunkSizeSelect" style="font-size: 0.82rem; font-weight: 600; color: #475569;">⚙️ Chunk Size:</label>
-                            <select id="chunkSizeSelect" style="padding: 3px 8px; font-size: 0.82rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; cursor: pointer; font-weight: 600; color: #0f172a; outline: none;" title="Select number of paragraphs per chunk">
+                            <label for="chunkSizeSelect" style="font-size: 0.84rem; font-weight: 500; color: var(--md-sys-color-on-surface-muted); display: flex; align-items: center; gap: 4px;">
+                                <span class="material-symbols-outlined" style="font-size:18px;">tune</span> Chunk Size:
+                            </label>
+                            <select id="chunkSizeSelect" title="Select number of paragraphs per chunk">
                                 <option value="1">1 Paragraph</option>
                                 <option value="2">2 Paragraphs</option>
                                 <option value="3" selected>3 Paragraphs (Default)</option>
@@ -44,17 +65,17 @@
                                 <option value="10">10 Paragraphs</option>
                             </select>
                         </div>
-                        <button class="btn btn-outline" onclick="clearSourceText()" style="padding: 4px 10px; font-size: 0.8rem; min-height: 28px;" title="Clear German source text">
-                            🗑️ Clear Text
+                        <button class="btn btn-outline" onclick="clearSourceText()" style="padding: 4px 12px; font-size: 0.82rem; min-height: 32px;" title="Clear German source text">
+                            <span class="material-symbols-outlined" style="font-size:18px;">delete</span> Clear Text
                         </button>
                     </div>
                 </div>
-                <textarea id="rawSourceText" style="height: 420px; min-height: 360px; font-size: 0.98rem; line-height: 1.6;" placeholder="Paste German text here or upload a file..."></textarea>
+                <textarea id="rawSourceText" placeholder="Paste German text here or upload a file..."></textarea>
                 
                 <!-- Centered Start Spot-Check Button -->
-                <div style="text-align: center; margin-top: 1.25rem;">
-                    <button class="btn" id="startBtn" onclick="initializeSpotCheck()" style="padding: 0.85rem 2.5rem; font-size: 1.05rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
-                        Start Spot-Check Mode ➔
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <button class="btn" id="startBtn" onclick="initializeSpotCheck()" style="padding: 0.85rem 2.5rem; font-size: 1.05rem;">
+                        <span class="material-symbols-outlined">play_arrow</span> Start Spot-Check Mode
                     </button>
                 </div>
             </div>
@@ -74,53 +95,84 @@
                 <!-- German Source Column -->
                 <div class="panel">
                     <div class="panel-header">
-                        <span>Original German</span>
+                        <div class="panel-title">
+                            <span class="material-symbols-outlined">translate</span> Original German
+                        </div>
                         
                         <!-- Translate Mode Toggle -->
                         <div class="mode-toggle-group">
                             <button id="translateHoverToggleBtn" class="mode-toggle-btn btn-mode-translate" onclick="toggleHoverTranslation()" title="Press 'T' key to toggle instant hover translation">
+                                <span class="material-symbols-outlined" style="font-size:18px;">find_in_page</span>
                                 Translate Hover <kbd class="mode-kbd">T</kbd>
                                 <span id="translateStatusBadge" class="toggle-status-badge status-off">OFF</span>
                             </button>
                         </div>
                     </div>
                     <div class="chunk-viewer" id="sourceChunkViewer"></div>
-                    <div class="hint" id="translateHoverHint">💡 <strong>Translate Hover (Press 'T'):</strong> Disabled. Press 'T' or click toggle to inspect word translations on hover.</div>
+                    <div class="hint" id="translateHoverHint">
+                        <span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span>
+                        <span><strong>Translate Hover (Press 'T'):</strong> Disabled. Press 'T' or click toggle to inspect word translations on hover.</span>
+                    </div>
                 </div>
 
                 <!-- English Target Column -->
                 <div class="panel">
                     <div class="panel-header">
-                        <span>Translated English</span>
+                        <div class="panel-title">
+                            <span class="material-symbols-outlined">g_translate</span> Translated English
+                        </div>
                         
                         <!-- Mode Selector Toggle -->
                         <div class="mode-toggle-group">
-                            <button class="mode-toggle-btn btn-mode-sentence active" id="modeSentenceBtn" onclick="setSelectionMode('sentence')">Sentence Mode <kbd class="mode-kbd">S</kbd></button>
-                            <button class="mode-toggle-btn btn-mode-word" id="modeWordBtn" onclick="setSelectionMode('word')">Word Mode <kbd class="mode-kbd">W</kbd></button>
+                            <button class="mode-toggle-btn btn-mode-sentence active" id="modeSentenceBtn" onclick="setSelectionMode('sentence')">
+                                <span class="material-symbols-outlined" style="font-size:18px;">short_text</span>
+                                Sentence Mode <kbd class="mode-kbd">S</kbd>
+                            </button>
+                            <button class="mode-toggle-btn btn-mode-word" id="modeWordBtn" onclick="setSelectionMode('word')">
+                                <span class="material-symbols-outlined" style="font-size:18px;">match_case</span>
+                                Word Mode <kbd class="mode-kbd">W</kbd>
+                            </button>
                         </div>
                     </div>
                     
                     <div class="chunk-viewer mode-sentence" id="targetChunkViewer"></div>
-                    <div class="hint" id="modeHint">💡 <strong>Sentence Mode (Press 'S'):</strong> Click any whole sentence to edit its phrasing.</div>
+                    <div class="hint" id="modeHint">
+                        <span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span>
+                        <span><strong>Sentence Mode (Press 'S'):</strong> Click any whole sentence to edit its phrasing.</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Stepper Navigation & Actions (Placed Beneath Workspace Panels) -->
+            <!-- Stepper Navigation & Actions -->
             <div class="stepper-bar">
                 <div class="stepper-btn-group">
-                    <button class="btn btn-outline" onclick="navigateChunk(-1)" id="prevBtn">← Previous Chunk</button>
-                    <button class="btn btn-outline" onclick="navigateChunk(1)" id="nextBtn">Next Chunk →</button>
+                    <button class="btn btn-outline" onclick="navigateChunk(-1)" id="prevBtn">
+                        <span class="material-symbols-outlined">navigate_before</span> Previous Chunk
+                    </button>
+                    <button class="btn btn-outline" onclick="navigateChunk(1)" id="nextBtn">
+                        Next Chunk <span class="material-symbols-outlined">navigate_next</span>
+                    </button>
                 </div>
                 <div class="stepper-info">
                     Chunk <span id="currentChunkNum">1</span> of <span id="totalChunksNum">1</span>
                     <span id="approvalBadge" class="badge">Unreviewed</span>
                 </div>
                 <div class="stepper-btn-group">
-                    <button class="btn btn-success" onclick="toggleApproveChunk()" id="approveBtn">✓ Approve Chunk</button>
-                    <button class="btn btn-warning" onclick="toggleFlagChunk()" id="flagBtn" title="Flag chunk for later re-review">🚩 Flag Chunk</button>
-                    <button class="btn btn-teal" onclick="approveAllChunks()" id="approveAllBtn" title="Approve all document chunks at once">✓✓ Approve All Chunks</button>
-                    <button class="btn" onclick="exportFullDocument()" id="downloadBtn">Download Full File</button>
-                    <button class="btn btn-danger" onclick="resetToRawInput()" title="Return to raw text entry to paste or upload a new document" id="startOverBtn">← Paste New Text / Start Over</button>
+                    <button class="btn btn-success" onclick="toggleApproveChunk()" id="approveBtn">
+                        <span class="material-symbols-outlined">check_circle</span> Approve Chunk
+                    </button>
+                    <button class="btn btn-warning" onclick="toggleFlagChunk()" id="flagBtn" title="Flag chunk for later re-review">
+                        <span class="material-symbols-outlined">flag</span> Flag Chunk
+                    </button>
+                    <button class="btn btn-teal" onclick="approveAllChunks()" id="approveAllBtn" title="Approve all document chunks at once">
+                        <span class="material-symbols-outlined">done_all</span> Approve All Chunks
+                    </button>
+                    <button class="btn" onclick="exportFullDocument()" id="downloadBtn">
+                        <span class="material-symbols-outlined">download</span> Download Full File
+                    </button>
+                    <button class="btn btn-danger" onclick="resetToRawInput()" title="Return to raw text entry to paste or upload a new document" id="startOverBtn">
+                        <span class="material-symbols-outlined">restart_alt</span> Start Over
+                    </button>
                 </div>
             </div>
         </div>
@@ -193,7 +245,7 @@
 
             const startBtn = document.getElementById('startBtn');
             startBtn.disabled = true;
-            startBtn.textContent = 'Segmenting & Translating...';
+            startBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Segmenting & Translating...';
 
             const chunkSizeEl = document.getElementById('chunkSizeSelect');
             const chunkSize = chunkSizeEl ? parseInt(chunkSizeEl.value, 10) || 3 : 3;
@@ -221,7 +273,7 @@
                 alert('Error initializing spot check.');
             } finally {
                 startBtn.disabled = false;
-                startBtn.textContent = 'Start Spot-Check Mode';
+                startBtn.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Start Spot-Check Mode';
             }
         }
 
@@ -241,7 +293,7 @@
             flagState = {};
             currentChunkIndex = 0;
 
-            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('uploadSection').style.display = 'flex';
             document.getElementById('rawInputGrid').style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -259,12 +311,12 @@
                 sentenceBtn.classList.add('active');
                 wordBtn.classList.remove('active');
                 viewer.className = 'chunk-viewer mode-sentence';
-                hint.innerHTML = '💡 <strong>Sentence Mode (Press \'S\'):</strong> Click any whole sentence to edit its phrasing.';
+                hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Sentence Mode (Press \'S\'):</strong> Click any whole sentence to edit its phrasing.</span>';
             } else {
                 wordBtn.classList.add('active');
                 sentenceBtn.classList.remove('active');
                 viewer.className = 'chunk-viewer mode-word';
-                hint.innerHTML = '💡 <strong>Word Mode (Press \'W\'):</strong> Click any individual word to edit or replace it.';
+                hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Word Mode (Press \'W\'):</strong> Click any individual word to edit or replace it.</span>';
             }
 
             renderCurrentChunk();
@@ -285,20 +337,20 @@
             const flagBtn = document.getElementById('flagBtn');
 
             if (flagState[currentChunkIndex]) {
-                badge.textContent = 'Flagged 🚩';
+                badge.innerHTML = '<span class="material-symbols-outlined" style="font-size:15px; vertical-align:-2px;">flag</span> Flagged';
                 badge.className = 'badge flagged';
-                approveBtn.textContent = '✓ Approve Chunk';
-                if (flagBtn) flagBtn.textContent = 'Unflag Chunk';
+                approveBtn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Approve Chunk';
+                if (flagBtn) flagBtn.innerHTML = '<span class="material-symbols-outlined">outlined_flag</span> Unflag Chunk';
             } else if (approvalState[currentChunkIndex]) {
-                badge.textContent = 'Approved ✓';
+                badge.innerHTML = '<span class="material-symbols-outlined" style="font-size:15px; vertical-align:-2px;">check_circle</span> Approved';
                 badge.className = 'badge approved';
-                approveBtn.textContent = 'Unapprove Chunk';
-                if (flagBtn) flagBtn.textContent = '🚩 Flag Chunk';
+                approveBtn.innerHTML = '<span class="material-symbols-outlined">cancel</span> Unapprove Chunk';
+                if (flagBtn) flagBtn.innerHTML = '<span class="material-symbols-outlined">flag</span> Flag Chunk';
             } else {
                 badge.textContent = 'Unreviewed';
                 badge.className = 'badge';
-                approveBtn.textContent = '✓ Approve Chunk';
-                if (flagBtn) flagBtn.textContent = '🚩 Flag Chunk';
+                approveBtn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Approve Chunk';
+                if (flagBtn) flagBtn.innerHTML = '<span class="material-symbols-outlined">flag</span> Flag Chunk';
             }
 
             // German Source
@@ -409,7 +461,7 @@
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'editable-unit';
-            input.style.width = `${Math.max(currentWord.length * 12, 40)}px`;
+            input.style.width = `${Math.max(currentWord.length * 12, 45)}px`;
             input.value = currentWord;
 
             function save() {
@@ -458,7 +510,7 @@
 
             const label = document.createElement('span');
             label.className = 'chunk-pagination-label';
-            label.innerHTML = '🧩 <strong>Jump to Chunk:</strong>';
+            label.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">grid_view</span> <strong>Jump to Chunk:</strong>';
             nav.appendChild(label);
 
             chunksData.forEach((_, idx) => {
@@ -480,11 +532,11 @@
 
                 const chunkNum = idx + 1;
                 if (isFlagged) {
-                    btn.innerHTML = `🚩 Chunk ${chunkNum}`;
-                    btn.title = `Jump to Chunk ${chunkNum} (Flagged for Re-Review 🚩)`;
+                    btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;">flag</span> Chunk ${chunkNum}`;
+                    btn.title = `Jump to Chunk ${chunkNum} (Flagged for Re-Review)`;
                 } else if (isApproved) {
-                    btn.innerHTML = `✓ Chunk ${chunkNum}`;
-                    btn.title = `Jump to Chunk ${chunkNum} (Approved ✓)`;
+                    btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;">check_circle</span> Chunk ${chunkNum}`;
+                    btn.title = `Jump to Chunk ${chunkNum} (Approved)`;
                 } else {
                     btn.innerHTML = `Chunk ${chunkNum}`;
                     btn.title = `Jump to Chunk ${chunkNum} (Unreviewed)`;
@@ -534,7 +586,7 @@
             const unapprovedChunks = [];
             for (let i = 0; i < chunksData.length; i++) {
                 if (!approvalState[i]) {
-                    const statusStr = flagState[i] ? `Chunk ${i + 1} (Flagged 🚩)` : `Chunk ${i + 1}`;
+                    const statusStr = flagState[i] ? `Chunk ${i + 1} (Flagged)` : `Chunk ${i + 1}`;
                     unapprovedChunks.push(statusStr);
                 }
             }
@@ -543,10 +595,15 @@
 
             if (unapprovedChunks.length > 0) {
                 // Flash red warning prompt
-                const chunkListStr = unapprovedChunks.map(c => `Chunk ${c}`).join(', ');
+                const chunkListStr = unapprovedChunks.join(', ');
                 alertBox.innerHTML = `
-                    <span>⚠️ <strong>Download Blocked:</strong> All chunks must be approved before downloading. Unreviewed: <strong>${chunkListStr}</strong></span>
-                    <button onclick="hideWarningAlert()" style="background:none; border:none; color:#991b1b; font-weight:bold; cursor:pointer; font-size:1.1rem; line-height:1; padding:0 4px;" title="Dismiss alert">✕</button>
+                    <span style="display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="font-size:22px;">warning</span>
+                        <span><strong>Download Blocked:</strong> All chunks must be approved before downloading. Unreviewed: <strong>${chunkListStr}</strong></span>
+                    </span>
+                    <button onclick="hideWarningAlert()" style="background:none; border:none; color:inherit; font-weight:bold; cursor:pointer; font-size:1.2rem; line-height:1; padding:0 4px; display:flex; align-items:center;" title="Dismiss alert">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
                 `;
                 alertBox.style.display = 'flex';
                 
@@ -642,7 +699,7 @@
                 }
                 if (sourceViewer) sourceViewer.classList.add('mode-translate-active');
                 if (hint) {
-                    hint.innerHTML = '💡 <strong>Translate Hover (Press \'T\'):</strong> Hover over any German word or select text to view instant translation.';
+                    hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Translate Hover (Press \'T\'):</strong> Hover over any German word or select text to view instant translation.</span>';
                 }
             } else {
                 if (btn) btn.classList.remove('active');
@@ -652,7 +709,7 @@
                 }
                 if (sourceViewer) sourceViewer.classList.remove('mode-translate-active');
                 if (hint) {
-                    hint.innerHTML = '💡 <strong>Translate Hover (Press \'T\'):</strong> Disabled. Press \'T\' or click toggle to inspect word translations on hover.';
+                    hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Translate Hover (Press \'T\'):</strong> Disabled. Press \'T\' or click toggle to inspect word translations on hover.</span>';
                 }
                 hideHoverTranslationTooltip();
             }
@@ -729,10 +786,10 @@
             
             gtTooltip.innerHTML = `
                 <span class="orig-term">"${origText}"</span>
-                <span style="color:#64748b; font-weight:bold;">➔</span>
+                <span class="material-symbols-outlined" style="font-size:16px; color:#8ab4f8;">arrow_forward</span>
                 <span class="trans-term">${translationText}</span>
                 <a href="${googleUrl}" target="_blank" rel="noopener noreferrer" title="Open in Google Translate">
-                    Google ↗
+                    Google <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
                 </a>
             `;
 
