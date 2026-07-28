@@ -18,11 +18,26 @@
         h1 { margin: 0 0 0.5rem 0; font-size: 1.75rem; }
         p { color: #475569; margin: 0; }
 
+        .beta-badge {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(217, 119, 6, 0.35);
+            border: 1px solid #b45309;
+            margin-left: 4px;
+        }
+
         /* Upload & Controls */
         .upload-section {
             background: #ffffff; border: 2px dashed #93c5fd; border-radius: 8px;
             padding: 1rem; text-align: center; margin-bottom: 1rem; cursor: pointer;
             box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            max-width: 720px; margin: 0 auto 1rem auto;
         }
         .upload-section:hover { border-color: #2563eb; background: #f8fafc; }
         .upload-section input { display: none; }
@@ -403,6 +418,7 @@
             <h1 style="display:flex; align-items:center; gap:10px; font-size:2rem; margin:0 0 0.4rem 0;">
                 <span style="background: linear-gradient(135deg, #1d4ed8, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; letter-spacing: -0.5px;">WortWeaver</span>
                 <span style="font-size:0.8rem; font-weight:700; background:#e0f2fe; color:#0369a1; padding:3px 10px; border-radius:12px; border:1px solid #bae6fd;">German ➔ English</span>
+                <span class="beta-badge">BETA</span>
             </h1>
             <p>Spot-check German translations paragraph by paragraph. Switch between whole sentence or single-word editing.</p>
         </header>
@@ -414,13 +430,20 @@
         </div>
 
         <!-- Raw Input Phase -->
-        <div class="workspace-grid" id="rawInputGrid">
-            <div class="panel" style="grid-column: span 2;">
+        <div id="rawInputGrid" style="max-width: 720px; margin: 0 auto 1.5rem auto;">
+            <div class="panel">
                 <div class="panel-header">
                     <span>Source Text (German)</span>
-                    <button class="btn" id="startBtn" onclick="initializeSpotCheck()">Start Spot-Check Mode</button>
+                    <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">Paste text or upload file</span>
                 </div>
-                <textarea id="rawSourceText" placeholder="Paste German text here or upload a file..." oninput="handleRawTextInput()"></textarea>
+                <textarea id="rawSourceText" style="height: 420px; min-height: 360px; font-size: 0.98rem; line-height: 1.6;" placeholder="Paste German text here or upload a file..." oninput="handleRawTextInput()"></textarea>
+                
+                <!-- Centered Start Spot-Check Button -->
+                <div style="text-align: center; margin-top: 1.25rem;">
+                    <button class="btn" id="startBtn" onclick="initializeSpotCheck()" style="padding: 0.85rem 2.5rem; font-size: 1.05rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+                        Start Spot-Check Mode ➔
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -598,7 +621,7 @@
             document.getElementById('spotCheckWorkspace').style.display = 'none';
             hideWarningAlert();
 
-            document.getElementById('rawInputGrid').style.display = 'grid';
+            document.getElementById('rawInputGrid').style.display = 'block';
             handleRawTextInput();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
