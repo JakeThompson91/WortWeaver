@@ -527,7 +527,7 @@
             renderCurrentChunk();
         }
 
-        function exportFullDocument() {
+        async function exportFullDocument() {
             if (!chunksData || chunksData.length === 0) return;
 
             // 1. Block download unless ALL chunks have been approved
@@ -559,26 +559,12 @@
 
             hideWarningAlert();
 
-            // 2. Allow user to provide a custom filename (default includes MM_DD_YYYY date stamp)
+            // Prepare default filename with MM_DD_YYYY date stamp
             const now = new Date();
             const mm = String(now.getMonth() + 1).padStart(2, '0');
             const dd = String(now.getDate()).padStart(2, '0');
             const yyyy = now.getFullYear();
             const defaultFilename = `spotchecked_translation_${mm}_${dd}_${yyyy}.txt`;
-
-            let userFilename = prompt('All chunks approved! Enter a filename for your download:', defaultFilename);
-
-            if (userFilename === null) {
-                return; // User canceled the prompt
-            }
-
-            userFilename = userFilename.trim();
-            if (!userFilename) {
-                userFilename = defaultFilename;
-            }
-            if (!userFilename.toLowerCase().endsWith('.txt')) {
-                userFilename += '.txt';
-            }
 
             // Compile full document translation
             let compiled = '';
@@ -587,8 +573,40 @@
                     compiled += para.map(s => s.translated).join(' ') + '\n\n';
                 });
             });
+            const textContent = compiled.trim();
 
-            const blob = new Blob([compiled.trim()], { type: 'text/plain;charset=utf-8' });
+            // 2. Try Native File System Access API (Opens OS Save-As file & folder picker dialog)
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: defaultFilename,
+                        types: [{
+                            description: 'Text Document (*.txt)',
+                            accept: { 'text/plain': ['.txt'] }
+                        }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(textContent);
+                    await writable.close();
+                    return; // Successfully saved to user-selected folder & file!
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        return; // User canceled the save file picker
+                    }
+                    // Fallback to standard prompt download if API fails
+                }
+            }
+
+            // Fallback for browsers without showSaveFilePicker: prompt filename & standard download
+            let userFilename = prompt('All chunks approved! Enter a filename for your download:', defaultFilename);
+            if (userFilename === null) return;
+
+            userFilename = userFilename.trim() || defaultFilename;
+            if (!userFilename.toLowerCase().endsWith('.txt')) {
+                userFilename += '.txt';
+            }
+
+            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = userFilename;
