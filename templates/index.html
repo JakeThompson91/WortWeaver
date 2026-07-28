@@ -306,6 +306,7 @@
         .stepper-info { font-weight: 600; color: #334155; }
         .badge { background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem; }
         .badge.approved { background: #dcfce7; color: #166534; }
+        .badge.flagged { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 
         /* Buttons */
         .btn { background-color: #2563eb; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: background-color 0.15s ease; }
@@ -313,6 +314,8 @@
         .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
         .btn-success { background-color: #059669; color: white; }
         .btn-success:hover { background-color: #047857; }
+        .btn-warning { background-color: #d97706; color: white; }
+        .btn-warning:hover { background-color: #b45309; }
         .btn-teal { background-color: #0d9488; color: white; }
         .btn-teal:hover { background-color: #0f766e; }
         .btn-outline { background-color: transparent; color: #475569; border: 1px solid #cbd5e1; }
@@ -404,7 +407,20 @@
             box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.3);
         }
 
-        .chunk-pill.active:not(.approved) {
+        .chunk-pill.flagged {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .chunk-pill.flagged.active {
+            background: #d97706;
+            color: #ffffff;
+            border-color: #b45309;
+            box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.3);
+        }
+
+        .chunk-pill.active:not(.approved):not(.flagged) {
             background: #2563eb;
             color: #ffffff;
             border-color: #1d4ed8;
@@ -504,6 +520,7 @@
                 </div>
                 <div>
                     <button class="btn btn-success" onclick="toggleApproveChunk()" id="approveBtn">✓ Approve Chunk</button>
+                    <button class="btn btn-warning" onclick="toggleFlagChunk()" id="flagBtn" style="margin-left: 0.5rem;" title="Flag chunk for later re-review">🚩 Flag Chunk</button>
                     <button class="btn btn-teal" onclick="approveAllChunks()" id="approveAllBtn" style="margin-left: 0.5rem;" title="Approve all document chunks at once">✓✓ Approve All Chunks</button>
                     <button class="btn" onclick="exportFullDocument()" style="margin-left: 0.5rem;" id="downloadBtn">Download Full File</button>
                 </div>
@@ -523,6 +540,7 @@
         let chunksData = [];
         let currentChunkIndex = 0;
         let approvalState = {};
+        let flagState = {};
         let currentSelectionMode = 'sentence'; // 'sentence' or 'word'
 
         // Keyboard Shortcuts for Mode Switching ('s' / 'S' for sentence mode, 'w' / 'W' for word mode)
@@ -601,6 +619,7 @@
                 if (chunksData.length > 0) {
                     currentChunkIndex = 0;
                     approvalState = {};
+                    flagState = {};
                     document.getElementById('rawInputGrid').style.display = 'none';
                     document.getElementById('uploadSection').style.display = 'none';
                     document.getElementById('spotCheckWorkspace').style.display = 'block';
@@ -661,17 +680,26 @@
             document.getElementById('prevBtn').disabled = (currentChunkIndex === 0);
             document.getElementById('nextBtn').disabled = (currentChunkIndex === chunksData.length - 1);
 
-            // Approval Badge State
+            // Approval & Flag Badge State
             const badge = document.getElementById('approvalBadge');
             const approveBtn = document.getElementById('approveBtn');
-            if (approvalState[currentChunkIndex]) {
+            const flagBtn = document.getElementById('flagBtn');
+
+            if (flagState[currentChunkIndex]) {
+                badge.textContent = 'Flagged 🚩';
+                badge.className = 'badge flagged';
+                approveBtn.textContent = '✓ Approve Chunk';
+                if (flagBtn) flagBtn.textContent = 'Unflag Chunk';
+            } else if (approvalState[currentChunkIndex]) {
                 badge.textContent = 'Approved ✓';
                 badge.className = 'badge approved';
                 approveBtn.textContent = 'Unapprove Chunk';
+                if (flagBtn) flagBtn.textContent = '🚩 Flag Chunk';
             } else {
                 badge.textContent = 'Unreviewed';
                 badge.className = 'badge';
                 approveBtn.textContent = '✓ Approve Chunk';
+                if (flagBtn) flagBtn.textContent = '🚩 Flag Chunk';
             }
 
             // German Source
@@ -825,28 +853,40 @@
                 const btn = document.createElement('button');
                 const isCurrent = (idx === currentChunkIndex);
                 const isApproved = !!approvalState[idx];
+                const isFlagged = !!flagState[idx];
 
                 let classNames = 'chunk-pill';
                 if (isCurrent) classNames += ' active';
-                if (isApproved) classNames += ' approved';
+                if (isFlagged) {
+                    classNames += ' flagged';
+                } else if (isApproved) {
+                    classNames += ' approved';
+                }
 
                 btn.className = classNames;
                 btn.onclick = () => jumpToChunk(idx);
 
                 const chunkNum = idx + 1;
-                if (isApproved) {
+                if (isFlagged) {
+                    btn.innerHTML = `🚩 Chunk ${chunkNum}`;
+                    btn.title = `Jump to Chunk ${chunkNum} (Flagged for Re-Review 🚩)`;
+                } else if (isApproved) {
                     btn.innerHTML = `✓ Chunk ${chunkNum}`;
+                    btn.title = `Jump to Chunk ${chunkNum} (Approved ✓)`;
                 } else {
                     btn.innerHTML = `Chunk ${chunkNum}`;
+                    btn.title = `Jump to Chunk ${chunkNum} (Unreviewed)`;
                 }
 
-                btn.title = `Jump to Chunk ${chunkNum}${isApproved ? ' (Approved ✓)' : ' (Unreviewed)'}`;
                 nav.appendChild(btn);
             });
         }
 
         function toggleApproveChunk() {
             approvalState[currentChunkIndex] = !approvalState[currentChunkIndex];
+            if (approvalState[currentChunkIndex]) {
+                flagState[currentChunkIndex] = false;
+            }
             renderCurrentChunk();
 
             if (chunksData && chunksData.length > 0) {
@@ -857,10 +897,19 @@
             }
         }
 
+        function toggleFlagChunk() {
+            flagState[currentChunkIndex] = !flagState[currentChunkIndex];
+            if (flagState[currentChunkIndex]) {
+                approvalState[currentChunkIndex] = false;
+            }
+            renderCurrentChunk();
+        }
+
         function approveAllChunks() {
             if (!chunksData || chunksData.length === 0) return;
             for (let i = 0; i < chunksData.length; i++) {
                 approvalState[i] = true;
+                flagState[i] = false;
             }
             hideWarningAlert();
             renderCurrentChunk();
@@ -873,7 +922,8 @@
             const unapprovedChunks = [];
             for (let i = 0; i < chunksData.length; i++) {
                 if (!approvalState[i]) {
-                    unapprovedChunks.push(i + 1); // 1-indexed chunk number
+                    const statusStr = flagState[i] ? `Chunk ${i + 1} (Flagged 🚩)` : `Chunk ${i + 1}`;
+                    unapprovedChunks.push(statusStr);
                 }
             }
 
