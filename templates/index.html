@@ -28,7 +28,12 @@
             <div class="panel">
                 <div class="panel-header">
                     <span>Source Text (German)</span>
-                    <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">Paste text or upload file</span>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <button class="btn btn-outline" onclick="clearSourceText()" style="padding: 4px 10px; font-size: 0.8rem; min-height: 28px;" title="Clear German source text">
+                            🗑️ Clear Text
+                        </button>
+                        <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">Paste text or upload file</span>
+                    </div>
                 </div>
                 <textarea id="rawSourceText" style="height: 420px; min-height: 360px; font-size: 0.98rem; line-height: 1.6;" placeholder="Paste German text here or upload a file..."></textarea>
                 
@@ -141,6 +146,14 @@
                 toggleHoverTranslation();
             }
         });
+
+        function clearSourceText() {
+            const rawEl = document.getElementById('rawSourceText');
+            if (rawEl) {
+                rawEl.value = '';
+                rawEl.focus();
+            }
+        }
 
         // 1. Process Uploaded File
         async function handleFileUpload(file) {
