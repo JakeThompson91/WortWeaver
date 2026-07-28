@@ -3,7 +3,15 @@ Cross-Platform Launcher for WortWeaver
 Automatically detects OS and uses Waitress WSGI server on Windows / production, or Flask dev server.
 """
 
+import sys
 import logging
+
+# Ensure UTF-8 stdout encoding on legacy Windows cp1252 consoles
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 
 # Suppress HTTP access logging from WSGI and Flask servers
 logging.getLogger('waitress').setLevel(logging.ERROR)
@@ -12,7 +20,7 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 def main():
     print("========================================================")
     print("             WortWeaver Translation Server              ")
-    print("  👉 Server Running at: http://127.0.0.1:5000           ")
+    print("  -> Server Running at: http://127.0.0.1:5000           ")
     print("  (Press Ctrl+C to stop)                                ")
     print("========================================================")
     
