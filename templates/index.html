@@ -452,7 +452,7 @@
                     <span>Source Text (German)</span>
                     <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">Paste text or upload file</span>
                 </div>
-                <textarea id="rawSourceText" style="height: 420px; min-height: 360px; font-size: 0.98rem; line-height: 1.6;" placeholder="Paste German text here or upload a file..." oninput="handleRawTextInput()"></textarea>
+                <textarea id="rawSourceText" style="height: 420px; min-height: 360px; font-size: 0.98rem; line-height: 1.6;" placeholder="Paste German text here or upload a file..."></textarea>
                 
                 <!-- Centered Start Spot-Check Button -->
                 <div style="text-align: center; margin-top: 1.25rem;">
@@ -564,14 +564,6 @@
             }
         });
 
-        function handleRawTextInput() {
-            const rawVal = document.getElementById('rawSourceText').value.trim();
-            const uploadSec = document.getElementById('uploadSection');
-            if (uploadSec) {
-                uploadSec.style.display = rawVal.length > 0 ? 'none' : 'block';
-            }
-        }
-
         // 1. Process Uploaded File
         async function handleFileUpload(file) {
             if (!file) return;
@@ -583,7 +575,6 @@
                 const result = await response.json();
                 if (response.ok) {
                     document.getElementById('rawSourceText').value = result.original_text;
-                    handleRawTextInput();
                 } else {
                     alert(result.error || 'Failed to parse file.');
                 }
@@ -642,8 +633,8 @@
             document.getElementById('spotCheckWorkspace').style.display = 'none';
             hideWarningAlert();
 
+            document.getElementById('uploadSection').style.display = 'block';
             document.getElementById('rawInputGrid').style.display = 'block';
-            handleRawTextInput();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
