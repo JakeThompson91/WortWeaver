@@ -6,12 +6,23 @@ import argostranslate.translate
 from pypdf import PdfReader
 
 import logging
+from logging.handlers import RotatingFileHandler
 
-# Suppress verbose HTTP request access logging
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
-logging.getLogger('waitress').setLevel(logging.ERROR)
+LOG_FILE = "wortweaver.log"
+
+# Setup Rotating File Handler for wortweaver.log
+file_handler = RotatingFileHandler(LOG_FILE, maxBytes=5*1024*1024, backupCount=2, encoding="utf-8")
+file_formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+
+LOGGER_NAMES = ['werkzeug', 'waitress', 'app', 'gunicorn.error', 'gunicorn.access']
+for name in LOGGER_NAMES:
+    logger_obj = logging.getLogger(name)
+    logger_obj.addHandler(file_handler)
+    logger_obj.setLevel(logging.ERROR)
 
 app = Flask(__name__)
+app.logger.addHandler(file_handler)
 
 FROM_CODE = "de"
 TO_CODE = "en"
@@ -183,25 +194,26 @@ def upload_file():
     except Exception as e:
         return jsonify({"error": f"Failed to read file: {str(e)}"}), 500
 
-is_debug_logging_enabled = False
+is_file_logging_enabled = False
 
 @app.route("/toggle-logging", methods=["POST"])
 def toggle_logging():
-    global is_debug_logging_enabled
+    global is_file_logging_enabled
     data = request.get_json() or {}
-    enabled = data.get("enabled", not is_debug_logging_enabled)
-    is_debug_logging_enabled = bool(enabled)
+    enabled = data.get("enabled", not is_file_logging_enabled)
+    is_file_logging_enabled = bool(enabled)
     
-    if is_debug_logging_enabled:
-        logging.getLogger('werkzeug').setLevel(logging.INFO)
-        logging.getLogger('waitress').setLevel(logging.INFO)
-        print("[WortWeaver] Terminal Debug Logging: ENABLED")
-    else:
-        logging.getLogger('werkzeug').setLevel(logging.ERROR)
-        logging.getLogger('waitress').setLevel(logging.ERROR)
-        print("[WortWeaver] Terminal Debug Logging: DISABLED")
+    target_level = logging.INFO if is_file_logging_enabled else logging.ERROR
+    for name in LOGGER_NAMES:
+        logging.getLogger(name).setLevel(target_level)
         
-    return jsonify({"logging_enabled": is_debug_logging_enabled})
+    status_text = "ENABLED" if is_file_logging_enabled else "DISABLED"
+    logging.getLogger('app').info(f"File logging {status_text} -> outputting to {LOG_FILE}")
+    
+    return jsonify({
+        "logging_enabled": is_file_logging_enabled,
+        "log_file": LOG_FILE
+    })
 
 if __name__ == "__main__":
     setup_translation_model()

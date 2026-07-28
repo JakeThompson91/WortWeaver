@@ -16,8 +16,9 @@ ENV/
 *.swp
 .DS_Store
 
-# Testing & Coverage
-.pytest_cache/
+# Logs
+*.log
+wortweaver.log
 .coverage
 htmlcov/
 
