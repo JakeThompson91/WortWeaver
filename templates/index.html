@@ -208,14 +208,7 @@
                 const result = await response.json();
                 chunksData = result.chunks;
 
-                if (chunksData && chunksData.length > 0) {
-                    chunksData.forEach(chunk => {
-                        chunk.paragraphs.forEach(para => {
-                            para.forEach(sPair => {
-                                sPair.initialTranslation = sPair.translated;
-                            });
-                        });
-                    });
+                if (chunksData.length > 0) {
                     currentChunkIndex = 0;
                     approvalState = {};
                     flagState = {};
@@ -339,61 +332,6 @@
                 sourceViewer.appendChild(p);
             });
 
-        // Word-level LCS Diffing helper to identify newly added/changed words
-        function computeWordDiff(initialText, currentText) {
-            if (!initialText || !currentText) return [];
-            const origWords = initialText.trim().split(/\s+/);
-            const newTokens = currentText.split(/(\s+)/); // preserve spaces
-            
-            const cleanOrig = origWords.map(w => w.toLowerCase().replace(/^[^\w]+|[^\w]+$/g, ''));
-            
-            const newWordIndices = [];
-            newTokens.forEach((tok, idx) => {
-                if (tok.trim().length > 0) newWordIndices.push(idx);
-            });
-            const cleanNew = newWordIndices.map(idx => newTokens[idx].toLowerCase().replace(/^[^\w]+|[^\w]+$/g, ''));
-            
-            const m = cleanOrig.length;
-            const n = cleanNew.length;
-
-            const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
-            for (let i = 1; i <= m; i++) {
-                for (let j = 1; j <= n; j++) {
-                    if (cleanOrig[i - 1] === cleanNew[j - 1]) {
-                        dp[i][j] = dp[i - 1][j - 1] + 1;
-                    } else {
-                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-                    }
-                }
-            }
-
-            const matchedNewIndices = new Set();
-            let i = m, j = n;
-            while (i > 0 && j > 0) {
-                if (cleanOrig[i - 1] === cleanNew[j - 1]) {
-                    matchedNewIndices.add(j - 1);
-                    i--;
-                    j--;
-                } else if (dp[i - 1][j] >= dp[i][j - 1]) {
-                    i--;
-                } else {
-                    j--;
-                }
-            }
-
-            const newWordSet = new Set();
-            cleanNew.forEach((_, idx) => {
-                if (!matchedNewIndices.has(idx)) {
-                    newWordSet.add(newWordIndices[idx]);
-                }
-            });
-
-            return newTokens.map((tok, idx) => ({
-                token: tok,
-                isNew: newWordSet.has(idx)
-            }));
-        }
-
             // English Target
             const targetViewer = document.getElementById('targetChunkViewer');
             targetViewer.innerHTML = '';
@@ -404,47 +342,22 @@
 
                 para.forEach((sentencePair, sIdx) => {
                     if (currentSelectionMode === 'sentence') {
-                        // Sentence Mode Rendering (Highlighting ONLY newly inserted/changed words)
+                        // Sentence Mode Rendering
                         const span = document.createElement('span');
-                        span.className = 'selectable-unit';
-                        
-                        if (sentencePair.isModified && sentencePair.initialTranslation && sentencePair.translated !== sentencePair.initialTranslation) {
-                            const diffTokens = computeWordDiff(sentencePair.initialTranslation, sentencePair.translated);
-                            diffTokens.forEach(item => {
-                                if (item.isNew && item.token.trim().length > 0) {
-                                    const modSpan = document.createElement('span');
-                                    modSpan.className = 'unit-modified';
-                                    modSpan.textContent = item.token;
-                                    span.appendChild(modSpan);
-                                } else {
-                                    span.appendChild(document.createTextNode(item.token));
-                                }
-                            });
-                            span.appendChild(document.createTextNode(' '));
-                        } else {
-                            span.textContent = sentencePair.translated + ' ';
-                        }
-                        
+                        const isSentenceModified = !!sentencePair.isModified;
+                        span.className = 'selectable-unit' + (isSentenceModified ? ' unit-modified' : '');
+                        span.textContent = sentencePair.translated + ' ';
                         span.onclick = () => editSentence(span, currentChunkIndex, pIdx, sIdx);
                         p.appendChild(span);
                     } else {
                         // Word Mode Rendering
                         const words = sentencePair.translated.split(/(\s+)/); // Keep spaces
-                        const diffTokens = (sentencePair.isModified && sentencePair.initialTranslation && sentencePair.translated !== sentencePair.initialTranslation)
-                            ? computeWordDiff(sentencePair.initialTranslation, sentencePair.translated)
-                            : null;
-
                         words.forEach((wordToken, wIdx) => {
                             if (wordToken.trim().length === 0) {
                                 p.appendChild(document.createTextNode(wordToken)); // Standard space
                             } else {
                                 const wordSpan = document.createElement('span');
-                                let isWordModified = false;
-                                if (diffTokens && diffTokens[wIdx]) {
-                                    isWordModified = diffTokens[wIdx].isNew;
-                                } else if (sentencePair.modifiedWords && sentencePair.modifiedWords[wIdx]) {
-                                    isWordModified = true;
-                                }
+                                const isWordModified = (sentencePair.modifiedWords && sentencePair.modifiedWords[wIdx]) || (sentencePair.isModified && !sentencePair.modifiedWords);
                                 wordSpan.className = 'selectable-unit' + (isWordModified ? ' unit-modified' : '');
                                 wordSpan.textContent = wordToken;
                                 wordSpan.onclick = () => editWord(wordSpan, currentChunkIndex, pIdx, sIdx, words, wIdx);
