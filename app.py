@@ -1,0 +1,140 @@
+import re
+import io
+from flask import Flask, render_template, request, jsonify
+import argostranslate.package
+import argostranslate.translate
+from pypdf import PdfReader
+
+app = Flask(__name__)
+
+FROM_CODE = "de"
+TO_CODE = "en"
+
+def setup_translation_model():
+    print("Checking translation packages...")
+    argostranslate.package.update_package_index()
+    available_packages = argostranslate.package.get_available_packages()
+    
+    de_en_package = next(
+        (pkg for pkg in available_packages if pkg.from_code == FROM_CODE and pkg.to_code == TO_CODE),
+        None
+    )
+    
+    if de_en_package:
+        installed = argostranslate.translate.get_installed_languages()
+        installed_codes = [lang.code for lang in installed]
+        
+        if FROM_CODE not in installed_codes or TO_CODE not in installed_codes:
+            print("Downloading model...")
+            download_path = de_en_package.download()
+            argostranslate.package.install_from_path(download_path)
+            print("Model installed!")
+
+def split_into_paragraphs(text):
+    """Splits raw text into paragraphs based on line breaks."""
+    normalized = text.replace('\r\n', '\n').replace('\r', '\n')
+    paragraphs = [p.strip() for p in normalized.split('\n\n') if p.strip()]
+    return paragraphs if paragraphs else [normalized.strip()]
+
+def split_paragraph_into_sentences(text):
+    """
+    Regex sentence boundary detection.
+    Splits on sentence-ending punctuation (.!? or German quote marks) followed by space/newline.
+    """
+    # Regex matches sentence terminators (. ! ? » ") followed by whitespace or end-of-string
+    sentence_end_pattern = r'(?<=[.!?»”"])\s+'
+    raw_sentences = re.split(sentence_end_pattern, text)
+    
+    sentences = [s.strip() for s in raw_sentences if s.strip()]
+    return sentences if sentences else [text.strip()]
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/spotcheck-process", methods=["POST"])
+def spotcheck_process():
+    """Processes input text into paragraph chunks and sentence pairs for interactive spot-checking."""
+    data = request.get_json()
+    source_text = data.get("text", "")
+    
+    if not source_text.strip():
+        return jsonify({"chunks": []})
+
+    paragraphs = split_into_paragraphs(source_text)
+    
+    # Group paragraphs into chunks of 3 paragraphs each
+    chunk_size = 3
+    paragraph_groups = [paragraphs[i:i + chunk_size] for i in range(0, len(paragraphs), chunk_size)]
+    
+    structured_chunks = []
+    
+    for chunk_idx, p_group in enumerate(paragraph_groups):
+        chunk_data = {"chunk_id": chunk_idx + 1, "paragraphs": []}
+        
+        for paragraph in p_group:
+            p_data = []
+            # Split German paragraph into sentences
+            sentences = split_paragraph_into_sentences(paragraph)
+            
+            for sentence in sentences:
+                s_clean = sentence.strip()
+                if s_clean:
+                    translated_s = argostranslate.translate.translate(s_clean, FROM_CODE, TO_CODE)
+                    p_data.append({
+                        "original": s_clean,
+                        "translated": translated_s
+                    })
+            
+            if p_data:
+                chunk_data["paragraphs"].append(p_data)
+                
+        structured_chunks.append(chunk_data)
+
+    return jsonify({"chunks": structured_chunks})
+
+@app.route("/translate-word", methods=["POST"])
+def translate_word():
+    """Translates an individual word or phrase on-demand for hover tooltips."""
+    data = request.get_json() or {}
+    raw_word = data.get("word", "").strip()
+    if not raw_word:
+        return jsonify({"translation": ""})
+    
+    clean_word = re.sub(r'^[^\w\s]+|[^\w\s]+$', '', raw_word, flags=re.UNICODE)
+    target = clean_word if clean_word else raw_word
+    
+    try:
+        translated = argostranslate.translate.translate(target, FROM_CODE, TO_CODE)
+    except Exception as e:
+        translated = target
+        
+    return jsonify({"original": raw_word, "clean": target, "translation": translated})
+
+@app.route("/upload", methods=["POST"])
+def upload_file():
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+        
+    uploaded_file = request.files["file"]
+    filename = uploaded_file.filename.lower()
+    extracted_text = ""
+    
+    try:
+        if filename.endswith(".txt"):
+            extracted_text = uploaded_file.read().decode("utf-8", errors="ignore")
+        elif filename.endswith(".pdf"):
+            pdf_reader = PdfReader(uploaded_file)
+            page_texts = [page.extract_text() for page in pdf_reader.pages if page.extract_text()]
+            extracted_text = "\n\n".join(page_texts)
+        else:
+            return jsonify({"error": "Please upload a .txt or .pdf file."}), 400
+
+        return jsonify({"original_text": extracted_text})
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to read file: {str(e)}"}), 500
+
+if __name__ == "__main__":
+    setup_translation_model()
+    app.run(host="127.0.0.1", port=5000, debug=True)

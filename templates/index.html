@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Translator - Granular Spot Check</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { 
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 50%, #eff6ff 100%); 
+            min-height: 100vh;
+            margin: 0; 
+            padding: 2rem; 
+            color: #0f172a; 
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { margin-bottom: 1.5rem; }
+        h1 { margin: 0 0 0.5rem 0; font-size: 1.75rem; }
+        p { color: #475569; margin: 0; }
+
+        /* Upload & Controls */
+        .upload-section {
+            background: #ffffff; border: 2px dashed #93c5fd; border-radius: 8px;
+            padding: 1rem; text-align: center; margin-bottom: 1rem; cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .upload-section:hover { border-color: #2563eb; background: #f8fafc; }
+        .upload-section input { display: none; }
+
+        /* Grid Layout */
+        .workspace-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .panel { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05); }
+        .panel-header { font-weight: 600; font-size: 0.9rem; color: #475569; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        
+        textarea { width: 100%; height: 200px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.75rem; font-size: 0.95rem; resize: vertical; outline: none; }
+        textarea:focus { border-color: #2563eb; }
+
+        /* Interactive Spot Check Container */
+        .chunk-viewer { 
+            background: #fafafa; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            padding: 1rem; 
+            min-height: 250px; 
+            max-height: 450px; 
+            overflow-y: scroll; 
+            scrollbar-width: thin;
+            scrollbar-color: #94a3b8 #f1f5f9;
+        }
+
+        /* Scrollbars for Chunk Viewers and Textarea */
+        .chunk-viewer::-webkit-scrollbar,
+        textarea::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .chunk-viewer::-webkit-scrollbar-track,
+        textarea::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+
+        .chunk-viewer::-webkit-scrollbar-thumb,
+        textarea::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 6px;
+            border: 2px solid #f1f5f9;
+        }
+
+        .chunk-viewer::-webkit-scrollbar-thumb:hover,
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        .paragraph-block { margin-bottom: 1.25rem; line-height: 1.7; }
+        
+        /* Interactive Elements */
+        .selectable-unit { display: inline-block; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s ease; border-radius: 3px; }
+        
+        /* Source Word Interactive Styles (Active only when Translate Mode is ON) */
+        .source-word {
+            border-radius: 3px;
+            padding: 0 1px;
+            transition: all 0.15s ease;
+        }
+        .mode-translate-active .source-word {
+            cursor: pointer;
+        }
+        .mode-translate-active .source-word:hover {
+            background-color: #fef08a;
+            color: #713f12;
+        }
+
+        /* Translate Mode Hover Toggle Button (Vibrant Purple Theme) */
+        .btn-translate-toggle {
+            border: 1px solid #ddd6fe;
+            background: #ede9fe;
+            color: #5b21b6;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-translate-toggle:hover {
+            background: #ddd6fe;
+            color: #4c1d95;
+        }
+        .btn-translate-toggle.active {
+            background: #7c3aed;
+            color: #ffffff;
+            border-color: #6d28d9;
+            box-shadow: 0 2px 5px rgba(124, 58, 237, 0.35);
+            font-weight: 700;
+        }
+        .btn-translate-toggle.active:hover {
+            background: #6d28d9;
+        }
+        .btn-translate-toggle .mode-kbd {
+            font-size: 0.75rem; 
+            font-weight: normal; 
+            background: #ddd6fe; 
+            color: #5b21b6;
+            padding: 1px 5px; 
+            border-radius: 3px;
+        }
+        .btn-translate-toggle.active .mode-kbd {
+            background: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
+        .toggle-status-badge {
+            font-size: 0.7rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .toggle-status-badge.status-off {
+            background: #ddd6fe;
+            color: #5b21b6;
+        }
+        .toggle-status-badge.status-on {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        /* Floating Hover Translation & Google Translate Tooltip */
+        .gt-tooltip {
+            position: absolute;
+            z-index: 1000;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+            border: 1px solid #334155;
+            transform: translateY(-100%);
+            margin-top: -6px;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        .gt-tooltip .orig-term {
+            color: #94a3b8;
+            font-style: italic;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .gt-tooltip .trans-term {
+            color: #38bdf8;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .gt-tooltip a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+            transition: all 0.15s ease;
+        }
+        .gt-tooltip a:hover {
+            background: #0284c7;
+            color: #ffffff;
+        }
+        
+        /* Sentence Mode Styles */
+        .mode-sentence .selectable-unit:hover { background-color: #fef08a; border-color: #eab308; }
+        
+        /* Word Mode Styles */
+        .mode-word .selectable-unit { padding: 0 2px; }
+        .mode-word .selectable-unit:hover { background-color: #bae6fd; border-color: #0284c7; }
+
+        /* Input for editing */
+        .editable-unit { background: #ffffff; border: 1px solid #2563eb; border-radius: 4px; padding: 2px 4px; font-size: 0.95rem; outline: none; display: inline-block; margin: 0 2px; }
+
+        /* Mode Selector Toggle */
+        .mode-toggle-group { display: flex; background: #e2e8f0; border-radius: 8px; padding: 4px; gap: 6px; }
+        .mode-toggle-btn { 
+            border: none; 
+            padding: 6px 12px; 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Sentence Mode Button (Warm Amber Theme) */
+        .btn-mode-sentence {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        .btn-mode-sentence:hover {
+            background: #fde68a;
+            color: #78350f;
+        }
+        .btn-mode-sentence.active {
+            background: #d97706;
+            color: #ffffff;
+            border: 1px solid #b45309;
+            box-shadow: 0 2px 4px rgba(217, 119, 6, 0.35);
+            font-weight: 700;
+        }
+        .btn-mode-sentence.active:hover {
+            background: #b45309;
+        }
+        .btn-mode-sentence .mode-kbd {
+            font-size: 0.75rem; 
+            font-weight: normal; 
+            background: #fde68a; 
+            color: #78350f;
+            padding: 1px 5px; 
+            border-radius: 3px;
+        }
+        .btn-mode-sentence.active .mode-kbd {
+            background: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
+
+        /* Word Mode Button (Sky Blue Theme) */
+        .btn-mode-word {
+            background: #e0f2fe;
+            color: #075985;
+            border: 1px solid #bae6fd;
+        }
+        .btn-mode-word:hover {
+            background: #bae6fd;
+            color: #0c4a6e;
+        }
+        .btn-mode-word.active {
+            background: #0284c7;
+            color: #ffffff;
+            border: 1px solid #0369a1;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.35);
+            font-weight: 700;
+        }
+        .btn-mode-word.active:hover {
+            background: #0369a1;
+        }
+        .btn-mode-word .mode-kbd {
+            font-size: 0.75rem; 
+            font-weight: normal; 
+            background: #bae6fd; 
+            color: #0c4a6e;
+            padding: 1px 5px; 
+            border-radius: 3px;
+        }
+        .btn-mode-word.active .mode-kbd {
+            background: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
+
+        /* Stepper Navigation */
+        .stepper-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1.5rem; }
+        .stepper-info { font-weight: 600; color: #334155; }
+        .badge { background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem; }
+        .badge.approved { background: #dcfce7; color: #166534; }
+
+        /* Buttons */
+        .btn { background-color: #2563eb; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+        .btn-success { background-color: #059669; }
+        .btn-success:hover { background-color: #047857; }
+        .btn-outline { background-color: transparent; color: #475569; border: 1px solid #cbd5e1; }
+        .btn-outline:hover { background-color: #f1f5f9; }
+
+        .hint { font-size: 0.8rem; color: #64748b; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Interactive Granular Spot-Check Translator</h1>
+            <p>Spot-check German translations paragraph by paragraph. Switch between whole sentence or single-word editing.</p>
+        </header>
+
+        <!-- Drag & Drop Upload Bar -->
+        <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+            <span style="font-weight:600; color:#2563eb;">Click to upload a document (.txt, .pdf)</span> or paste text below
+            <input type="file" id="fileInput" accept=".txt,.pdf" onchange="handleFileUpload(this.files[0])">
+        </div>
+
+        <!-- Raw Input Phase -->
+        <div class="workspace-grid" id="rawInputGrid">
+            <div class="panel" style="grid-column: span 2;">
+                <div class="panel-header">
+                    <span>Source Text (German)</span>
+                    <button class="btn" id="startBtn" onclick="initializeSpotCheck()">Start Spot-Check Mode</button>
+                </div>
+                <textarea id="rawSourceText" placeholder="Paste German text here or upload a file..."></textarea>
+            </div>
+        </div>
+
+        <!-- Spot Check Workspace -->
+        <div id="spotCheckWorkspace" style="display: none;">
+            
+            <!-- Stepper Navigation -->
+            <div class="stepper-bar">
+                <div>
+                    <button class="btn btn-outline" onclick="navigateChunk(-1)" id="prevBtn">← Previous Chunk</button>
+                    <button class="btn btn-outline" onclick="navigateChunk(1)" id="nextBtn">Next Chunk →</button>
+                </div>
+                <div class="stepper-info">
+                    Chunk <span id="currentChunkNum">1</span> of <span id="totalChunksNum">1</span>
+                    <span id="approvalBadge" class="badge">Unreviewed</span>
+                </div>
+                <div>
+                    <button class="btn btn-success" onclick="toggleApproveChunk()" id="approveBtn">✓ Approve Chunk</button>
+                    <button class="btn btn-success" onclick="exportFullDocument()" style="margin-left: 0.5rem;">Download Full File</button>
+                </div>
+            </div>
+
+            <!-- Workspace Panel -->
+            <div class="workspace-grid">
+                <!-- German Source Column -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Original German</span>
+                        <button id="translateHoverToggleBtn" class="btn-translate-toggle" onclick="toggleHoverTranslation()" title="Press 'T' key to toggle instant hover translation">
+                            Translate Hover <kbd class="mode-kbd">T</kbd>
+                            <span id="translateStatusBadge" class="toggle-status-badge status-off">OFF</span>
+                        </button>
+                    </div>
+                    <div class="chunk-viewer" id="sourceChunkViewer"></div>
+                </div>
+
+                <!-- English Target Column -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Translated English</span>
+                        
+                        <!-- Mode Selector Toggle -->
+                        <div class="mode-toggle-group">
+                            <button class="mode-toggle-btn btn-mode-sentence active" id="modeSentenceBtn" onclick="setSelectionMode('sentence')">Sentence Mode <kbd class="mode-kbd">S</kbd></button>
+                            <button class="mode-toggle-btn btn-mode-word" id="modeWordBtn" onclick="setSelectionMode('word')">Word Mode <kbd class="mode-kbd">W</kbd></button>
+                        </div>
+                    </div>
+                    
+                    <div class="chunk-viewer mode-sentence" id="targetChunkViewer"></div>
+                    <div class="hint" id="modeHint">💡 <strong>Sentence Mode (Press 'S'):</strong> Click any whole sentence to edit its phrasing.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chunksData = [];
+        let currentChunkIndex = 0;
+        let approvalState = {};
+        let currentSelectionMode = 'sentence'; // 'sentence' or 'word'
+
+        // Keyboard Shortcuts for Mode Switching ('s' / 'S' for sentence mode, 'w' / 'W' for word mode)
+        document.addEventListener('keydown', (e) => {
+            const active = document.activeElement;
+            const isEditable = active && (
+                active.tagName === 'INPUT' ||
+                active.tagName === 'TEXTAREA' ||
+                active.isContentEditable
+            );
+            if (isEditable) return;
+            if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+            const key = e.key.toLowerCase();
+            if (key === 's') {
+                setSelectionMode('sentence');
+            } else if (key === 'w') {
+                setSelectionMode('word');
+            } else if (key === 't') {
+                toggleHoverTranslation();
+            }
+        });
+
+        // 1. Process Uploaded File
+        async function handleFileUpload(file) {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('rawSourceText').value = result.original_text;
+                } else {
+                    alert(result.error || 'Failed to parse file.');
+                }
+            } catch (err) {
+                alert('Error uploading file.');
+            } finally {
+                document.getElementById('fileInput').value = '';
+            }
+        }
+
+        // 2. Initialize Spot Check
+        async function initializeSpotCheck() {
+            const rawText = document.getElementById('rawSourceText').value;
+            if (!rawText.trim()) {
+                alert('Please enter or upload German text first.');
+                return;
+            }
+
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
+            startBtn.textContent = 'Segmenting & Translating...';
+
+            try {
+                const response = await fetch('/spotcheck-process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: rawText })
+                });
+
+                const result = await response.json();
+                chunksData = result.chunks;
+
+                if (chunksData.length > 0) {
+                    currentChunkIndex = 0;
+                    approvalState = {};
+                    document.getElementById('rawInputGrid').style.display = 'none';
+                    document.getElementById('spotCheckWorkspace').style.display = 'block';
+                    renderCurrentChunk();
+                }
+            } catch (err) {
+                alert('Error initializing spot check.');
+            } finally {
+                startBtn.disabled = false;
+                startBtn.textContent = 'Start Spot-Check Mode';
+            }
+        }
+
+        // 3. Switch Selection Mode (Sentence vs Word)
+        function setSelectionMode(mode) {
+            currentSelectionMode = mode;
+            
+            const sentenceBtn = document.getElementById('modeSentenceBtn');
+            const wordBtn = document.getElementById('modeWordBtn');
+            const viewer = document.getElementById('targetChunkViewer');
+            const hint = document.getElementById('modeHint');
+
+            if (mode === 'sentence') {
+                sentenceBtn.classList.add('active');
+                wordBtn.classList.remove('active');
+                viewer.className = 'chunk-viewer mode-sentence';
+                hint.innerHTML = '💡 <strong>Sentence Mode (Press \'S\'):</strong> Click any whole sentence to edit its phrasing.';
+            } else {
+                wordBtn.classList.add('active');
+                sentenceBtn.classList.remove('active');
+                viewer.className = 'chunk-viewer mode-word';
+                hint.innerHTML = '💡 <strong>Word Mode (Press \'W\'):</strong> Click any individual word to edit or replace it.';
+            }
+
+            renderCurrentChunk();
+        }
+
+        // 4. Render Active Chunk
+        function renderCurrentChunk() {
+            const chunk = chunksData[currentChunkIndex];
+            document.getElementById('currentChunkNum').textContent = currentChunkIndex + 1;
+            document.getElementById('totalChunksNum').textContent = chunksData.length;
+
+            document.getElementById('prevBtn').disabled = (currentChunkIndex === 0);
+            document.getElementById('nextBtn').disabled = (currentChunkIndex === chunksData.length - 1);
+
+            // Approval Badge State
+            const badge = document.getElementById('approvalBadge');
+            const approveBtn = document.getElementById('approveBtn');
+            if (approvalState[currentChunkIndex]) {
+                badge.textContent = 'Approved ✓';
+                badge.className = 'badge approved';
+                approveBtn.textContent = 'Unapprove Chunk';
+            } else {
+                badge.textContent = 'Unreviewed';
+                badge.className = 'badge';
+                approveBtn.textContent = '✓ Approve Chunk';
+            }
+
+            // German Source
+            const sourceViewer = document.getElementById('sourceChunkViewer');
+            sourceViewer.innerHTML = '';
+            chunk.paragraphs.forEach(para => {
+                const p = document.createElement('div');
+                p.className = 'paragraph-block';
+                
+                para.forEach(sentencePair => {
+                    const words = sentencePair.original.split(/(\s+)/);
+                    words.forEach(wordToken => {
+                        if (wordToken.trim().length === 0) {
+                            p.appendChild(document.createTextNode(wordToken));
+                        } else {
+                            const wordSpan = document.createElement('span');
+                            wordSpan.className = 'source-word';
+                            wordSpan.textContent = wordToken;
+                            wordSpan.addEventListener('mouseenter', () => {
+                                handleSourceWordHover(wordSpan, wordToken);
+                            });
+                            wordSpan.addEventListener('mouseleave', () => {
+                                handleSourceWordLeave();
+                            });
+                            p.appendChild(wordSpan);
+                        }
+                    });
+                    p.appendChild(document.createTextNode(' '));
+                });
+
+                sourceViewer.appendChild(p);
+            });
+
+            // English Target
+            const targetViewer = document.getElementById('targetChunkViewer');
+            targetViewer.innerHTML = '';
+            
+            chunk.paragraphs.forEach((para, pIdx) => {
+                const p = document.createElement('div');
+                p.className = 'paragraph-block';
+
+                para.forEach((sentencePair, sIdx) => {
+                    if (currentSelectionMode === 'sentence') {
+                        // Sentence Mode Rendering
+                        const span = document.createElement('span');
+                        span.className = 'selectable-unit';
+                        span.textContent = sentencePair.translated + ' ';
+                        span.onclick = () => editSentence(span, currentChunkIndex, pIdx, sIdx);
+                        p.appendChild(span);
+                    } else {
+                        // Word Mode Rendering
+                        const words = sentencePair.translated.split(/(\s+)/); // Keep spaces
+                        words.forEach((wordToken, wIdx) => {
+                            if (wordToken.trim().length === 0) {
+                                p.appendChild(document.createTextNode(wordToken)); // Standard space
+                            } else {
+                                const wordSpan = document.createElement('span');
+                                wordSpan.className = 'selectable-unit';
+                                wordSpan.textContent = wordToken;
+                                wordSpan.onclick = () => editWord(wordSpan, currentChunkIndex, pIdx, sIdx, words, wIdx);
+                                p.appendChild(wordSpan);
+                            }
+                        });
+                        p.appendChild(document.createTextNode(' '));
+                    }
+                });
+
+                targetViewer.appendChild(p);
+            });
+        }
+
+        // 5. Edit Whole Sentence
+        function editSentence(element, cIdx, pIdx, sIdx) {
+            const currentText = chunksData[cIdx].paragraphs[pIdx][sIdx].translated;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'editable-unit';
+            input.style.width = '90%';
+            input.value = currentText;
+
+            function save() {
+                const val = input.value.trim();
+                if (val) chunksData[cIdx].paragraphs[pIdx][sIdx].translated = val;
+                renderCurrentChunk();
+            }
+
+            input.onblur = save;
+            input.onkeydown = (e) => { if (e.key === 'Enter') save(); };
+            element.replaceWith(input);
+            input.focus();
+        }
+
+        // 6. Edit Single Word
+        function editWord(element, cIdx, pIdx, sIdx, wordsArray, wIdx) {
+            const currentWord = wordsArray[wIdx];
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'editable-unit';
+            input.style.width = `${Math.max(currentWord.length * 12, 40)}px`;
+            input.value = currentWord;
+
+            function save() {
+                const val = input.value.trim();
+                if (val) {
+                    wordsArray[wIdx] = val;
+                    // Reassemble words into complete sentence
+                    chunksData[cIdx].paragraphs[pIdx][sIdx].translated = wordsArray.join('');
+                }
+                renderCurrentChunk();
+            }
+
+            input.onblur = save;
+            input.onkeydown = (e) => { if (e.key === 'Enter') save(); };
+            element.replaceWith(input);
+            input.focus();
+        }
+
+        // 7. Navigation & Export
+        function navigateChunk(dir) {
+            currentChunkIndex += dir;
+            renderCurrentChunk();
+        }
+
+        function toggleApproveChunk() {
+            approvalState[currentChunkIndex] = !approvalState[currentChunkIndex];
+            renderCurrentChunk();
+        }
+
+        function exportFullDocument() {
+            let compiled = '';
+            chunksData.forEach(chunk => {
+                chunk.paragraphs.forEach(para => {
+                    compiled += para.map(s => s.translated).join(' ') + '\n\n';
+                });
+            });
+
+            const blob = new Blob([compiled.trim()], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'spotchecked_translation.txt';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // 8. Hover Word Translation & Floating Tooltip for Original German Panel
+        let isTranslateHoverEnabled = false;
+
+        function toggleHoverTranslation(forceState) {
+            if (typeof forceState === 'boolean') {
+                isTranslateHoverEnabled = forceState;
+            } else {
+                isTranslateHoverEnabled = !isTranslateHoverEnabled;
+            }
+
+            const btn = document.getElementById('translateHoverToggleBtn');
+            const badge = document.getElementById('translateStatusBadge');
+            const sourceViewer = document.getElementById('sourceChunkViewer');
+
+            if (isTranslateHoverEnabled) {
+                if (btn) btn.classList.add('active');
+                if (badge) {
+                    badge.textContent = 'ON ✓';
+                    badge.className = 'toggle-status-badge status-on';
+                }
+                if (sourceViewer) sourceViewer.classList.add('mode-translate-active');
+            } else {
+                if (btn) btn.classList.remove('active');
+                if (badge) {
+                    badge.textContent = 'OFF';
+                    badge.className = 'toggle-status-badge status-off';
+                }
+                if (sourceViewer) sourceViewer.classList.remove('mode-translate-active');
+                hideHoverTranslationTooltip();
+            }
+        }
+
+        const gtTooltip = document.createElement('div');
+        gtTooltip.id = 'gtTooltip';
+        gtTooltip.className = 'gt-tooltip';
+        gtTooltip.style.display = 'none';
+        document.body.appendChild(gtTooltip);
+
+        let currentHoveredWordEl = null;
+        let isHoveringTooltip = false;
+        const wordTranslationCache = {};
+
+        gtTooltip.addEventListener('mouseenter', () => { isHoveringTooltip = true; });
+        gtTooltip.addEventListener('mouseleave', () => { 
+            isHoveringTooltip = false; 
+            hideHoverTranslationTooltip(); 
+        });
+
+        async function fetchWordTranslation(cleanWord) {
+            const cacheKey = cleanWord.toLowerCase();
+            if (wordTranslationCache[cacheKey]) {
+                return wordTranslationCache[cacheKey];
+            }
+
+            try {
+                const response = await fetch('/translate-word', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: cleanWord })
+                });
+                const data = await response.json();
+                const translation = data.translation || cleanWord;
+                wordTranslationCache[cacheKey] = translation;
+                return translation;
+            } catch (err) {
+                return cleanWord;
+            }
+        }
+
+        async function handleSourceWordHover(element, wordToken) {
+            if (!isTranslateHoverEnabled) return;
+            currentHoveredWordEl = element;
+            const cleanWord = wordToken.trim().replace(/^[.,!?:;"»“()\s]+|[.,!?:;"»”()\s]+$/g, '');
+            if (!cleanWord) return;
+
+            const rect = element.getBoundingClientRect();
+            const cacheKey = cleanWord.toLowerCase();
+            
+            if (wordTranslationCache[cacheKey]) {
+                renderHoverTooltip(cleanWord, wordTranslationCache[cacheKey], rect);
+            } else {
+                renderHoverTooltip(cleanWord, 'Translating...', rect);
+                const translation = await fetchWordTranslation(cleanWord);
+                if (currentHoveredWordEl === element && isTranslateHoverEnabled) {
+                    renderHoverTooltip(cleanWord, translation, rect);
+                }
+            }
+        }
+
+        function handleSourceWordLeave() {
+            currentHoveredWordEl = null;
+            setTimeout(() => {
+                if (!currentHoveredWordEl && !isHoveringTooltip) {
+                    hideHoverTranslationTooltip();
+                }
+            }, 120);
+        }
+
+        function renderHoverTooltip(origText, translationText, rect) {
+            const googleUrl = `https://translate.google.com/?sl=de&tl=en&text=${encodeURIComponent(origText)}&op=translate`;
+            
+            gtTooltip.innerHTML = `
+                <span class="orig-term">"${origText}"</span>
+                <span style="color:#64748b; font-weight:bold;">➔</span>
+                <span class="trans-term">${translationText}</span>
+                <a href="${googleUrl}" target="_blank" rel="noopener noreferrer" title="Open in Google Translate">
+                    Google ↗
+                </a>
+            `;
+
+            gtTooltip.style.display = 'flex';
+            
+            let top = rect.top + window.scrollY;
+            let left = rect.left + window.scrollX + (rect.width / 2) - (gtTooltip.offsetWidth / 2);
+
+            left = Math.max(10, Math.min(window.innerWidth - gtTooltip.offsetWidth - 10, left));
+            if (top - gtTooltip.offsetHeight < 10) {
+                top = rect.bottom + window.scrollY + gtTooltip.offsetHeight + 12;
+            }
+
+            gtTooltip.style.top = `${top}px`;
+            gtTooltip.style.left = `${left}px`;
+        }
+
+        function hideHoverTranslationTooltip() {
+            if (gtTooltip) gtTooltip.style.display = 'none';
+        }
+
+        // Selection Listener for multi-word highlights
+        document.addEventListener('mouseup', async (e) => {
+            if (!isTranslateHoverEnabled) return;
+            const sourceViewer = document.getElementById('sourceChunkViewer');
+            if (!sourceViewer) return;
+
+            if (gtTooltip && gtTooltip.contains(e.target)) return;
+
+            const selection = window.getSelection();
+            const selectedText = selection ? selection.toString().trim() : '';
+
+            if (selectedText && sourceViewer.contains(selection.anchorNode)) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                const cleanText = selectedText.replace(/^[.,!?:;"»“()\s]+|[.,!?:;"»”()\s]+$/g, '');
+                renderHoverTooltip(cleanText, 'Translating...', rect);
+                const translation = await fetchWordTranslation(cleanText);
+                if (isTranslateHoverEnabled) {
+                    renderHoverTooltip(cleanText, translation, rect);
+                }
+            }
+        });
+
+        document.addEventListener('scroll', (e) => {
+            if (e.target && e.target.id === 'sourceChunkViewer') {
+                hideHoverTranslationTooltip();
+            }
+        }, true);
+    </script>
+</body>
+</html>
