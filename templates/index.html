@@ -91,53 +91,129 @@
             color: #713f12;
         }
 
-        /* Translate Mode Hover Toggle Button (Vibrant Purple Theme) */
-        .btn-translate-toggle {
-            border: 1px solid #ddd6fe;
-            background: #ede9fe;
-            color: #5b21b6;
-            padding: 4px 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
+        /* Mode Selector Toggle Component (Unified for both panels) */
+        .mode-toggle-group { 
+            display: inline-flex; 
+            background: #e2e8f0; 
+            border-radius: 8px; 
+            padding: 3px; 
+            gap: 4px; 
+        }
+        .mode-toggle-btn { 
+            border: 1px solid transparent; 
+            padding: 5px 11px; 
+            font-size: 0.82rem; 
+            font-weight: 600; 
+            border-radius: 6px; 
+            cursor: pointer; 
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            line-height: 1;
         }
-        .btn-translate-toggle:hover {
+        .mode-kbd {
+            font-size: 0.72rem; 
+            font-weight: 600; 
+            padding: 2px 5px; 
+            border-radius: 4px;
+            line-height: 1;
+        }
+
+        /* Sentence Mode Button (Warm Amber Theme) */
+        .btn-mode-sentence {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+        .btn-mode-sentence:hover {
+            background: #fde68a;
+            color: #78350f;
+        }
+        .btn-mode-sentence.active {
+            background: #d97706;
+            color: #ffffff;
+            border-color: #b45309;
+            box-shadow: 0 2px 4px rgba(217, 119, 6, 0.35);
+            font-weight: 700;
+        }
+        .btn-mode-sentence.active:hover {
+            background: #b45309;
+        }
+        .btn-mode-sentence .mode-kbd {
+            background: #fde68a; 
+            color: #78350f;
+        }
+        .btn-mode-sentence.active .mode-kbd {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        /* Word Mode Button (Sky Blue Theme) */
+        .btn-mode-word {
+            background: #e0f2fe;
+            color: #075985;
+            border-color: #bae6fd;
+        }
+        .btn-mode-word:hover {
+            background: #bae6fd;
+            color: #0c4a6e;
+        }
+        .btn-mode-word.active {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #0369a1;
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.35);
+            font-weight: 700;
+        }
+        .btn-mode-word.active:hover {
+            background: #0369a1;
+        }
+        .btn-mode-word .mode-kbd {
+            background: #bae6fd; 
+            color: #0c4a6e;
+        }
+        .btn-mode-word.active .mode-kbd {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        /* Translate Hover Button (Vibrant Purple Theme) */
+        .btn-mode-translate {
+            background: #ede9fe;
+            color: #5b21b6;
+            border-color: #ddd6fe;
+        }
+        .btn-mode-translate:hover {
             background: #ddd6fe;
             color: #4c1d95;
         }
-        .btn-translate-toggle.active {
+        .btn-mode-translate.active {
             background: #7c3aed;
             color: #ffffff;
             border-color: #6d28d9;
             box-shadow: 0 2px 5px rgba(124, 58, 237, 0.35);
             font-weight: 700;
         }
-        .btn-translate-toggle.active:hover {
+        .btn-mode-translate.active:hover {
             background: #6d28d9;
         }
-        .btn-translate-toggle .mode-kbd {
-            font-size: 0.75rem; 
-            font-weight: normal; 
+        .btn-mode-translate .mode-kbd {
             background: #ddd6fe; 
             color: #5b21b6;
-            padding: 1px 5px; 
-            border-radius: 3px;
         }
-        .btn-translate-toggle.active .mode-kbd {
-            background: rgba(255, 255, 255, 0.3);
+        .btn-mode-translate.active .mode-kbd {
+            background: rgba(255, 255, 255, 0.25);
             color: #ffffff;
         }
+
         .toggle-status-badge {
-            font-size: 0.7rem;
-            padding: 1px 5px;
-            border-radius: 3px;
+            font-size: 0.68rem;
+            padding: 2px 5px;
+            border-radius: 4px;
             font-weight: 700;
             text-transform: uppercase;
+            line-height: 1;
         }
         .toggle-status-badge.status-off {
             background: #ddd6fe;
@@ -210,89 +286,8 @@
         /* Input for editing */
         .editable-unit { background: #ffffff; border: 1px solid #2563eb; border-radius: 4px; padding: 2px 4px; font-size: 0.95rem; outline: none; display: inline-block; margin: 0 2px; }
 
-        /* Mode Selector Toggle */
-        .mode-toggle-group { display: flex; background: #e2e8f0; border-radius: 8px; padding: 4px; gap: 6px; }
-        .mode-toggle-btn { 
-            border: none; 
-            padding: 6px 12px; 
-            font-size: 0.85rem; 
-            font-weight: 600; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Sentence Mode Button (Warm Amber Theme) */
-        .btn-mode-sentence {
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #fde68a;
-        }
-        .btn-mode-sentence:hover {
-            background: #fde68a;
-            color: #78350f;
-        }
-        .btn-mode-sentence.active {
-            background: #d97706;
-            color: #ffffff;
-            border: 1px solid #b45309;
-            box-shadow: 0 2px 4px rgba(217, 119, 6, 0.35);
-            font-weight: 700;
-        }
-        .btn-mode-sentence.active:hover {
-            background: #b45309;
-        }
-        .btn-mode-sentence .mode-kbd {
-            font-size: 0.75rem; 
-            font-weight: normal; 
-            background: #fde68a; 
-            color: #78350f;
-            padding: 1px 5px; 
-            border-radius: 3px;
-        }
-        .btn-mode-sentence.active .mode-kbd {
-            background: rgba(255, 255, 255, 0.3);
-            color: #ffffff;
-        }
-
-        /* Word Mode Button (Sky Blue Theme) */
-        .btn-mode-word {
-            background: #e0f2fe;
-            color: #075985;
-            border: 1px solid #bae6fd;
-        }
-        .btn-mode-word:hover {
-            background: #bae6fd;
-            color: #0c4a6e;
-        }
-        .btn-mode-word.active {
-            background: #0284c7;
-            color: #ffffff;
-            border: 1px solid #0369a1;
-            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.35);
-            font-weight: 700;
-        }
-        .btn-mode-word.active:hover {
-            background: #0369a1;
-        }
-        .btn-mode-word .mode-kbd {
-            font-size: 0.75rem; 
-            font-weight: normal; 
-            background: #bae6fd; 
-            color: #0c4a6e;
-            padding: 1px 5px; 
-            border-radius: 3px;
-        }
-        .btn-mode-word.active .mode-kbd {
-            background: rgba(255, 255, 255, 0.3);
-            color: #ffffff;
-        }
-
         /* Stepper Navigation */
-        .stepper-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1.5rem; }
+        .stepper-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 10px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
         .stepper-info { font-weight: 600; color: #334155; }
         .badge { background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem; }
         .badge.approved { background: #dcfce7; color: #166534; }
@@ -306,7 +301,7 @@
         .btn-outline { background-color: transparent; color: #475569; border: 1px solid #cbd5e1; }
         .btn-outline:hover { background-color: #f1f5f9; }
 
-        .hint { font-size: 0.8rem; color: #64748b; margin-top: 0.5rem; }
+        .hint { font-size: 0.82rem; color: #475569; margin-top: 0.6rem; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -358,12 +353,17 @@
                 <div class="panel">
                     <div class="panel-header">
                         <span>Original German</span>
-                        <button id="translateHoverToggleBtn" class="btn-translate-toggle" onclick="toggleHoverTranslation()" title="Press 'T' key to toggle instant hover translation">
-                            Translate Hover <kbd class="mode-kbd">T</kbd>
-                            <span id="translateStatusBadge" class="toggle-status-badge status-off">OFF</span>
-                        </button>
+                        
+                        <!-- Translate Mode Toggle -->
+                        <div class="mode-toggle-group">
+                            <button id="translateHoverToggleBtn" class="mode-toggle-btn btn-mode-translate" onclick="toggleHoverTranslation()" title="Press 'T' key to toggle instant hover translation">
+                                Translate Hover <kbd class="mode-kbd">T</kbd>
+                                <span id="translateStatusBadge" class="toggle-status-badge status-off">OFF</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="chunk-viewer" id="sourceChunkViewer"></div>
+                    <div class="hint" id="translateHoverHint">💡 <strong>Translate Hover (Press 'T'):</strong> Disabled. Press 'T' or click toggle to inspect word translations on hover.</div>
                 </div>
 
                 <!-- English Target Column -->
@@ -671,6 +671,7 @@
             const btn = document.getElementById('translateHoverToggleBtn');
             const badge = document.getElementById('translateStatusBadge');
             const sourceViewer = document.getElementById('sourceChunkViewer');
+            const hint = document.getElementById('translateHoverHint');
 
             if (isTranslateHoverEnabled) {
                 if (btn) btn.classList.add('active');
@@ -679,6 +680,9 @@
                     badge.className = 'toggle-status-badge status-on';
                 }
                 if (sourceViewer) sourceViewer.classList.add('mode-translate-active');
+                if (hint) {
+                    hint.innerHTML = '💡 <strong>Translate Hover (Press \'T\'):</strong> Hover over any German word or select text to view instant translation.';
+                }
             } else {
                 if (btn) btn.classList.remove('active');
                 if (badge) {
@@ -686,6 +690,9 @@
                     badge.className = 'toggle-status-badge status-off';
                 }
                 if (sourceViewer) sourceViewer.classList.remove('mode-translate-active');
+                if (hint) {
+                    hint.innerHTML = '💡 <strong>Translate Hover (Press \'T\'):</strong> Disabled. Press \'T\' or click toggle to inspect word translations on hover.';
+                }
                 hideHoverTranslationTooltip();
             }
         }
