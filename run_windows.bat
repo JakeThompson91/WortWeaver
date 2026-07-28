@@ -54,12 +54,25 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
+:: Create Desktop Shortcut if missing
+set "DESKTOP_SHORTCUT=%USERPROFILE%\Desktop\WortWeaver.url"
+if not exist "%DESKTOP_SHORTCUT%" (
+    echo [InternetShortcut] > "%DESKTOP_SHORTCUT%"
+    echo URL=http://127.0.0.1:5000 >> "%DESKTOP_SHORTCUT%"
+    echo IconIndex=0 >> "%DESKTOP_SHORTCUT%"
+    echo [OK] Created Desktop shortcut: WortWeaver
+)
+
 echo.
 echo ========================================================
 echo  Starting WortWeaver Web App on http://127.0.0.1:5000
+echo  Opening browser and launching server...
 echo  Press Ctrl+C in this window to stop the server.
 echo ========================================================
 echo.
+
+:: Automatically open browser tab
+start http://127.0.0.1:5000
 
 python run_app.py
 

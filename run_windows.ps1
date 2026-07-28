@@ -42,12 +42,24 @@ if (Test-Path ".\venv\Scripts\Activate.ps1") {
 Write-Host "[3/3] Checking dependencies from requirements.txt..." -ForegroundColor Yellow
 pip install -r requirements.txt --disable-pip-version-check
 
+# Create Desktop Shortcut if missing
+$desktopPath = [System.Environment]::GetFolderPath('Desktop')
+$shortcutPath = Join-Path $desktopPath "WortWeaver.url"
+if (-not (Test-Path $shortcutPath)) {
+    "[InternetShortcut]`nURL=http://127.0.0.1:5000`nIconIndex=0" | Out-File -FilePath $shortcutPath -Encoding ascii
+    Write-Host "[OK] Created Desktop shortcut: WortWeaver.url" -ForegroundColor Green
+}
+
 Write-Host ""
 Write-Host "========================================================" -ForegroundColor Green
 Write-Host " Launching WortWeaver on http://127.0.0.1:5000          " -ForegroundColor Green
+Write-Host " Opening browser and launching server...                " -ForegroundColor Green
 Write-Host " Press Ctrl+C in this window to stop the server         " -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green
 Write-Host ""
+
+# Automatically open browser tab
+Start-Process "http://127.0.0.1:5000"
 
 python run_app.py
 
