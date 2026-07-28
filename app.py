@@ -5,30 +5,34 @@ import argostranslate.package
 import argostranslate.translate
 from pypdf import PdfReader
 
+import logging
+
+# Suppress verbose HTTP request access logging
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+logging.getLogger('waitress').setLevel(logging.ERROR)
+
 app = Flask(__name__)
 
 FROM_CODE = "de"
 TO_CODE = "en"
 
 def setup_translation_model():
-    print("Checking translation packages...")
-    argostranslate.package.update_package_index()
-    available_packages = argostranslate.package.get_available_packages()
-    
-    de_en_package = next(
-        (pkg for pkg in available_packages if pkg.from_code == FROM_CODE and pkg.to_code == TO_CODE),
-        None
-    )
-    
-    if de_en_package:
+    try:
         installed = argostranslate.translate.get_installed_languages()
         installed_codes = [lang.code for lang in installed]
         
         if FROM_CODE not in installed_codes or TO_CODE not in installed_codes:
-            print("Downloading model...")
-            download_path = de_en_package.download()
-            argostranslate.package.install_from_path(download_path)
-            print("Model installed!")
+            argostranslate.package.update_package_index()
+            available_packages = argostranslate.package.get_available_packages()
+            de_en_package = next(
+                (pkg for pkg in available_packages if pkg.from_code == FROM_CODE and pkg.to_code == TO_CODE),
+                None
+            )
+            if de_en_package:
+                download_path = de_en_package.download()
+                argostranslate.package.install_from_path(download_path)
+    except Exception:
+        pass
 
 def split_into_paragraphs(text):
     """

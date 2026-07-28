@@ -18,9 +18,9 @@ timeout = 120
 keepalive = 5
 
 # Logging
-loglevel = "info"
-accesslog = "-"  # Log to stdout
-errorlog = "-"   # Log to stderr
+loglevel = "warning"
+accesslog = None  # Suppress HTTP access logging
+errorlog = "-"    # Log only critical errors
 
 # Process Name
 proc_name = "wortweaver_gunicorn"
