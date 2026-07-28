@@ -429,20 +429,25 @@
                         p.appendChild(span);
                     } else {
                         // Word Mode Rendering
+                        const words = sentencePair.translated.split(/(\s+)/); // Keep spaces
                         const diffTokens = (sentencePair.isModified && sentencePair.initialTranslation && sentencePair.translated !== sentencePair.initialTranslation)
                             ? computeWordDiff(sentencePair.initialTranslation, sentencePair.translated)
-                            : sentencePair.translated.split(/(\s+)/).map(t => ({ token: t, isNew: false }));
+                            : null;
 
-                        diffTokens.forEach((tokenObj, tIdx) => {
-                            const wordToken = tokenObj.token;
+                        words.forEach((wordToken, wIdx) => {
                             if (wordToken.trim().length === 0) {
                                 p.appendChild(document.createTextNode(wordToken)); // Standard space
                             } else {
                                 const wordSpan = document.createElement('span');
-                                const isWordModified = !!tokenObj.isNew;
+                                let isWordModified = false;
+                                if (diffTokens && diffTokens[wIdx]) {
+                                    isWordModified = diffTokens[wIdx].isNew;
+                                } else if (sentencePair.modifiedWords && sentencePair.modifiedWords[wIdx]) {
+                                    isWordModified = true;
+                                }
                                 wordSpan.className = 'selectable-unit' + (isWordModified ? ' unit-modified' : '');
                                 wordSpan.textContent = wordToken;
-                                wordSpan.onclick = () => editWord(wordSpan, currentChunkIndex, pIdx, sIdx, diffTokens.map(t => t.token), tIdx);
+                                wordSpan.onclick = () => editWord(wordSpan, currentChunkIndex, pIdx, sIdx, words, wIdx);
                                 p.appendChild(wordSpan);
                             }
                         });
