@@ -154,12 +154,16 @@ def upload_file():
         if filename.endswith(".txt"):
             extracted_text = uploaded_file.read().decode("utf-8", errors="ignore")
         elif filename.endswith(".pdf"):
-            pdf_reader = PdfReader(uploaded_file)
+            pdf_stream = io.BytesIO(uploaded_file.read())
+            pdf_reader = PdfReader(pdf_stream)
             page_texts = []
             for page in pdf_reader.pages:
-                txt = page.extract_text()
-                if txt and txt.strip():
-                    page_texts.append(txt.strip())
+                try:
+                    txt = page.extract_text()
+                    if txt and txt.strip():
+                        page_texts.append(txt.strip())
+                except Exception:
+                    continue
             extracted_text = "\n\n".join(page_texts)
         else:
             return jsonify({"error": "Please upload a .txt or .pdf file."}), 400
