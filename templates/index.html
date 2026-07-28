@@ -28,11 +28,25 @@
             <div class="panel">
                 <div class="panel-header">
                     <span>Source Text (German)</span>
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <label for="chunkSizeSelect" style="font-size: 0.82rem; font-weight: 600; color: #475569;">⚙️ Chunk Size:</label>
+                            <select id="chunkSizeSelect" style="padding: 3px 8px; font-size: 0.82rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; cursor: pointer; font-weight: 600; color: #0f172a; outline: none;" title="Select number of paragraphs per chunk">
+                                <option value="1">1 Paragraph</option>
+                                <option value="2">2 Paragraphs</option>
+                                <option value="3" selected>3 Paragraphs (Default)</option>
+                                <option value="4">4 Paragraphs</option>
+                                <option value="5">5 Paragraphs</option>
+                                <option value="6">6 Paragraphs</option>
+                                <option value="7">7 Paragraphs</option>
+                                <option value="8">8 Paragraphs</option>
+                                <option value="9">9 Paragraphs</option>
+                                <option value="10">10 Paragraphs</option>
+                            </select>
+                        </div>
                         <button class="btn btn-outline" onclick="clearSourceText()" style="padding: 4px 10px; font-size: 0.8rem; min-height: 28px;" title="Clear German source text">
                             🗑️ Clear Text
                         </button>
-                        <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">Paste text or upload file</span>
                     </div>
                 </div>
                 <textarea id="rawSourceText" style="height: 420px; min-height: 360px; font-size: 0.98rem; line-height: 1.6;" placeholder="Paste German text here or upload a file..."></textarea>
@@ -181,11 +195,14 @@
             startBtn.disabled = true;
             startBtn.textContent = 'Segmenting & Translating...';
 
+            const chunkSizeEl = document.getElementById('chunkSizeSelect');
+            const chunkSize = chunkSizeEl ? parseInt(chunkSizeEl.value, 10) || 3 : 3;
+
             try {
                 const response = await fetch('/spotcheck-process', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: rawText })
+                    body: JSON.stringify({ text: rawText, chunk_size: chunkSize })
                 });
 
                 const result = await response.json();

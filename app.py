@@ -85,16 +85,22 @@ def index():
 @app.route("/spotcheck-process", methods=["POST"])
 def spotcheck_process():
     """Processes input text into paragraph chunks and sentence pairs for interactive spot-checking."""
-    data = request.get_json()
+    data = request.get_json() or {}
     source_text = data.get("text", "")
     
     if not source_text.strip():
         return jsonify({"chunks": []})
 
+    # Read customizable chunk_size (clamped between 1 and 10, defaulting to 3)
+    try:
+        chunk_size = int(data.get("chunk_size", 3))
+        chunk_size = max(1, min(10, chunk_size))
+    except (ValueError, TypeError):
+        chunk_size = 3
+
     paragraphs = split_into_paragraphs(source_text)
     
-    # Group paragraphs into chunks of 3 paragraphs each
-    chunk_size = 3
+    # Group paragraphs into customizable chunk sizes
     paragraph_groups = [paragraphs[i:i + chunk_size] for i in range(0, len(paragraphs), chunk_size)]
     
     structured_chunks = []
