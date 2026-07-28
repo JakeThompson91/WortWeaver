@@ -405,7 +405,7 @@
         </header>
 
         <!-- Drag & Drop Upload Bar -->
-        <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-section" id="uploadSection" onclick="document.getElementById('fileInput').click()">
             <span style="font-weight:600; color:#2563eb;">Click to upload a document (.txt, .pdf)</span> or paste text below
             <input type="file" id="fileInput" accept=".txt,.pdf" onchange="handleFileUpload(this.files[0])">
         </div>
@@ -417,7 +417,7 @@
                     <span>Source Text (German)</span>
                     <button class="btn" id="startBtn" onclick="initializeSpotCheck()">Start Spot-Check Mode</button>
                 </div>
-                <textarea id="rawSourceText" placeholder="Paste German text here or upload a file..."></textarea>
+                <textarea id="rawSourceText" placeholder="Paste German text here or upload a file..." oninput="handleRawTextInput()"></textarea>
             </div>
         </div>
 
@@ -480,6 +480,14 @@
                     <div class="hint" id="modeHint">💡 <strong>Sentence Mode (Press 'S'):</strong> Click any whole sentence to edit its phrasing.</div>
                 </div>
             </div>
+
+            <!-- Workspace Bottom Toolbar -->
+            <div style="margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <button class="btn btn-outline" onclick="resetToRawInput()" title="Return to raw text entry to paste or upload a new document">
+                    ← Paste New Text / Start Over
+                </button>
+                <span style="font-size:0.85rem; color:#475569; font-weight: 500;">Spot-check review session in progress</span>
+            </div>
         </div>
     </div>
 
@@ -510,6 +518,14 @@
             }
         });
 
+        function handleRawTextInput() {
+            const rawVal = document.getElementById('rawSourceText').value.trim();
+            const uploadSec = document.getElementById('uploadSection');
+            if (uploadSec) {
+                uploadSec.style.display = rawVal.length > 0 ? 'none' : 'block';
+            }
+        }
+
         // 1. Process Uploaded File
         async function handleFileUpload(file) {
             if (!file) return;
@@ -521,6 +537,7 @@
                 const result = await response.json();
                 if (response.ok) {
                     document.getElementById('rawSourceText').value = result.original_text;
+                    handleRawTextInput();
                 } else {
                     alert(result.error || 'Failed to parse file.');
                 }
@@ -557,6 +574,7 @@
                     currentChunkIndex = 0;
                     approvalState = {};
                     document.getElementById('rawInputGrid').style.display = 'none';
+                    document.getElementById('uploadSection').style.display = 'none';
                     document.getElementById('spotCheckWorkspace').style.display = 'block';
                     renderCurrentChunk();
                 }
@@ -566,6 +584,20 @@
                 startBtn.disabled = false;
                 startBtn.textContent = 'Start Spot-Check Mode';
             }
+        }
+
+        function resetToRawInput() {
+            if (chunksData.length > 0) {
+                if (!confirm('Are you sure you want to exit spot-check mode? Any unsaved edits will be lost.')) {
+                    return;
+                }
+            }
+            document.getElementById('spotCheckWorkspace').style.display = 'none';
+            hideWarningAlert();
+
+            document.getElementById('rawInputGrid').style.display = 'grid';
+            handleRawTextInput();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // 3. Switch Selection Mode (Sentence vs Word)
