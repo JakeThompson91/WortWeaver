@@ -705,8 +705,13 @@
 
             hideWarningAlert();
 
-            // 2. Allow user to provide a custom filename
-            const defaultFilename = 'spotchecked_translation.txt';
+            // 2. Allow user to provide a custom filename (default includes MM_DD_YYYY date stamp)
+            const now = new Date();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const yyyy = now.getFullYear();
+            const defaultFilename = `spotchecked_translation_${mm}_${dd}_${yyyy}.txt`;
+
             let userFilename = prompt('All chunks approved! Enter a filename for your download:', defaultFilename);
 
             if (userFilename === null) {
