@@ -71,8 +71,8 @@ python run_app.py
 
 ### 1. Clone & Setup
 ```bash
-git clone https://github.com/JakeThompson91/local-translation-app.git
-cd local-translation-app
+git clone https://github.com/JakeThompson91/WortWeaver.git
+cd WortWeaver
 
 python3 -m venv venv
 source venv/bin/activate
