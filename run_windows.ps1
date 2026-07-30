@@ -1,8 +1,8 @@
-# WortWeaver PowerShell Launcher for Windows
+# WörtWeaver PowerShell Launcher for Windows
 Set-Location -Path $PSScriptRoot
 
 Write-Host "========================================================" -ForegroundColor Cyan
-Write-Host "         WortWeaver PowerShell Launcher for Windows     " -ForegroundColor Cyan
+Write-Host "         WörtWeaver PowerShell Launcher for Windows     " -ForegroundColor Cyan
 Write-Host "========================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -44,15 +44,15 @@ pip install -r requirements.txt --disable-pip-version-check
 
 # Create Desktop Shortcut if missing
 $desktopPath = [System.Environment]::GetFolderPath('Desktop')
-$shortcutPath = Join-Path $desktopPath "WortWeaver.url"
+$shortcutPath = Join-Path $desktopPath "WörtWeaver.url"
 if (-not (Test-Path $shortcutPath)) {
     "[InternetShortcut]`nURL=http://127.0.0.1:5000`nIconIndex=0" | Out-File -FilePath $shortcutPath -Encoding ascii
-    Write-Host "[OK] Created Desktop shortcut: WortWeaver.url" -ForegroundColor Green
+    Write-Host "[OK] Created Desktop shortcut: WörtWeaver.url" -ForegroundColor Green
 }
 
 Write-Host ""
 Write-Host "========================================================" -ForegroundColor Green
-Write-Host " Launching WortWeaver on http://127.0.0.1:5000          " -ForegroundColor Green
+Write-Host " Launching WörtWeaver on http://127.0.0.1:5000          " -ForegroundColor Green
 Write-Host " Opening browser and launching server...                " -ForegroundColor Green
 Write-Host " Press Ctrl+C in this window to stop the server         " -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green

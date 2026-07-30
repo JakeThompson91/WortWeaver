@@ -1,4 +1,4 @@
-# WortWeaver - Interactive Granular Translation Spot-Checker
+# WörtWeaver - Interactive Granular Translation Spot-Checker
 
 A modern, web-based tool for interactive, paragraph-by-paragraph spot-checking and editing of German to English translations using local machine translation models.
 
@@ -72,7 +72,7 @@ venv\Scripts\activate
 :: 3. Install Dependencies (Includes Waitress for native Windows production WSGI)
 pip install -r requirements.txt
 
-:: 4. Launch WortWeaver Server
+:: 4. Launch WörtWeaver Server
 python run_app.py
 ```
 
@@ -122,7 +122,7 @@ local-translation-app/
 
 ## 🌿 Git Workflow & Versioning Best Practices
 
-WortWeaver follows professional Git development practices:
+WörtWeaver follows professional Git development practices:
 
 ### Branching Model
 - **`main`**: Represents production-ready, stable releases. Protected from direct commits.

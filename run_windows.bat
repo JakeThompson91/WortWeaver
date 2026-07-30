@@ -1,9 +1,9 @@
 @echo off
-TITLE WortWeaver - Local German-English Spot-Checker
+TITLE WörtWeaver - Local German-English Spot-Checker
 cd /d "%~dp0"
 
 echo ========================================================
-echo               WortWeaver Windows Launcher
+echo               WörtWeaver Windows Launcher
 echo ========================================================
 echo.
 
@@ -55,17 +55,17 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 :: Create Desktop Shortcut if missing
-set "DESKTOP_SHORTCUT=%USERPROFILE%\Desktop\WortWeaver.url"
+set "DESKTOP_SHORTCUT=%USERPROFILE%\Desktop\WörtWeaver.url"
 if not exist "%DESKTOP_SHORTCUT%" (
     echo [InternetShortcut] > "%DESKTOP_SHORTCUT%"
     echo URL=http://127.0.0.1:5000 >> "%DESKTOP_SHORTCUT%"
     echo IconIndex=0 >> "%DESKTOP_SHORTCUT%"
-    echo [OK] Created Desktop shortcut: WortWeaver
+    echo [OK] Created Desktop shortcut: WörtWeaver
 )
 
 echo.
 echo ========================================================
-echo  Starting WortWeaver Web App on http://127.0.0.1:5000
+echo  Starting WörtWeaver Web App on http://127.0.0.1:5000
 echo  Opening browser and launching server...
 echo  Press Ctrl+C in this window to stop the server.
 echo ========================================================
@@ -78,7 +78,7 @@ python run_app.py
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
-    echo [ERROR] WortWeaver terminated with error code %ERRORLEVEL%.
+    echo [ERROR] WörtWeaver terminated with error code %ERRORLEVEL%.
 )
 
 echo.
