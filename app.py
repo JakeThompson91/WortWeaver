@@ -2,6 +2,8 @@ import re
 import io
 import os
 import logging
+import functools
+from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, render_template, request, jsonify
 import argostranslate.package
 import argostranslate.translate
@@ -16,7 +18,47 @@ app = Flask(__name__)
 FROM_CODE = "de"
 TO_CODE = "en"
 
+# Module-level pre-compiled regular expressions
+PARAGRAPH_BOUNDARY_RE = re.compile(r'(?<=[.!?»”"])\n+(?=[A-ZÄÖÜ0-9"»“])')
+DOUBLE_NEWLINE_RE = re.compile(r'\n\s*\n')
+SOFT_BREAK_RE = re.compile(r'(?<!\n)\n(?!\n)')
+WHITESPACE_RE = re.compile(r'\s+')
+SENTENCE_END_RE = re.compile(r'(?<=[.!?»”"])\s+')
+CLEAN_WORD_RE = re.compile(r'^[^\w\s]+|[^\w\s]+$', re.UNICODE)
+
+# Global cached translation model handle
+_TRANSLATION_MODEL = None
+
+def get_translation_model():
+    global _TRANSLATION_MODEL
+    if _TRANSLATION_MODEL is None:
+        try:
+            _TRANSLATION_MODEL = argostranslate.translate.get_translation_from_codes(FROM_CODE, TO_CODE)
+        except Exception:
+            _TRANSLATION_MODEL = None
+    return _TRANSLATION_MODEL
+
+@functools.lru_cache(maxsize=8192)
+def translate_text(text: str) -> str:
+    """
+    Cached translation wrapper bypassing package lookup overhead.
+    Uses cached translation model handle and LRU cache for instant lookups.
+    """
+    if not text:
+        return ""
+    model = get_translation_model()
+    if model:
+        try:
+            return model.translate(text)
+        except Exception:
+            pass
+    try:
+        return argostranslate.translate.translate(text, FROM_CODE, TO_CODE)
+    except Exception:
+        return text
+
 def setup_translation_model():
+    """Initializes ArgosTranslate package if needed and pre-warms translation model into RAM."""
     try:
         installed = argostranslate.translate.get_installed_languages()
         installed_codes = [lang.code for lang in installed]
@@ -31,6 +73,11 @@ def setup_translation_model():
             if de_en_package:
                 download_path = de_en_package.download()
                 argostranslate.package.install_from_path(download_path)
+
+        # Pre-warm model in RAM to eliminate cold-start delay on first request
+        model = get_translation_model()
+        if model:
+            model.translate("Hallo")
     except Exception:
         pass
 
@@ -46,16 +93,16 @@ def split_into_paragraphs(text):
     normalized = text.replace('\r\n', '\n').replace('\r', '\n')
 
     # Convert single newlines following sentence terminators into double newlines
-    normalized = re.sub(r'(?<=[.!?»”"])\n+(?=[A-ZÄÖÜ0-9"»“])', '\n\n', normalized)
+    normalized = PARAGRAPH_BOUNDARY_RE.sub('\n\n', normalized)
 
     # Split on double or multiple newlines
-    raw_paragraphs = [p.strip() for p in re.split(r'\n\s*\n', normalized) if p.strip()]
+    raw_paragraphs = [p.strip() for p in DOUBLE_NEWLINE_RE.split(normalized) if p.strip()]
 
     clean_paragraphs = []
     for p in raw_paragraphs:
         # Replace soft single line breaks inside a paragraph with a single space
-        single_line = re.sub(r'(?<!\n)\n(?!\n)', ' ', p)
-        single_line = re.sub(r'\s+', ' ', single_line).strip()
+        single_line = SOFT_BREAK_RE.sub(' ', p)
+        single_line = WHITESPACE_RE.sub(' ', single_line).strip()
         if single_line:
             clean_paragraphs.append(single_line)
 
@@ -75,10 +122,7 @@ def split_paragraph_into_sentences(text):
     Regex sentence boundary detection.
     Splits on sentence-ending punctuation (.!? or German quote marks) followed by space/newline.
     """
-    # Regex matches sentence terminators (. ! ? » ") followed by whitespace or end-of-string
-    sentence_end_pattern = r'(?<=[.!?»”"])\s+'
-    raw_sentences = re.split(sentence_end_pattern, text)
-    
+    raw_sentences = SENTENCE_END_RE.split(text)
     sentences = [s.strip() for s in raw_sentences if s.strip()]
     return sentences if sentences else [text.strip()]
 
@@ -88,7 +132,7 @@ def index():
 
 @app.route("/spotcheck-process", methods=["POST"])
 def spotcheck_process():
-    """Processes input text into paragraph chunks and sentence pairs for interactive spot-checking."""
+    """Processes input text into paragraph chunks and sentence pairs with parallel multi-threaded translation."""
     data = request.get_json() or {}
     source_text = data.get("text", "")
     
@@ -107,25 +151,39 @@ def spotcheck_process():
     # Group paragraphs into customizable chunk sizes
     paragraph_groups = [paragraphs[i:i + chunk_size] for i in range(0, len(paragraphs), chunk_size)]
     
-    structured_chunks = []
+    # Extract sentence structure and collect unique sentences to translate
+    chunk_sentence_map = []
+    all_sentences = []
     
     for chunk_idx, p_group in enumerate(paragraph_groups):
+        chunk_paragraphs = []
+        for paragraph in p_group:
+            sentences = split_paragraph_into_sentences(paragraph)
+            cleaned_sentences = [s.strip() for s in sentences if s.strip()]
+            chunk_paragraphs.append(cleaned_sentences)
+            all_sentences.extend(cleaned_sentences)
+        chunk_sentence_map.append(chunk_paragraphs)
+    
+    # Multi-threaded concurrent sentence translation (CTranslate2 releases GIL)
+    if all_sentences:
+        unique_sentences = list(dict.fromkeys(all_sentences))
+        max_workers = min(8, os.cpu_count() or 4)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            list(executor.map(translate_text, unique_sentences))
+
+    # Construct final structured chunks from populated cache
+    structured_chunks = []
+    for chunk_idx, chunk_paragraphs in enumerate(chunk_sentence_map):
         chunk_data = {"chunk_id": chunk_idx + 1, "paragraphs": []}
         
-        for paragraph in p_group:
+        for sentences in chunk_paragraphs:
             p_data = []
-            # Split German paragraph into sentences
-            sentences = split_paragraph_into_sentences(paragraph)
-            
-            for sentence in sentences:
-                s_clean = sentence.strip()
-                if s_clean:
-                    translated_s = argostranslate.translate.translate(s_clean, FROM_CODE, TO_CODE)
-                    p_data.append({
-                        "original": s_clean,
-                        "translated": translated_s
-                    })
-            
+            for s_clean in sentences:
+                translated_s = translate_text(s_clean)
+                p_data.append({
+                    "original": s_clean,
+                    "translated": translated_s
+                })
             if p_data:
                 chunk_data["paragraphs"].append(p_data)
                 
@@ -135,19 +193,16 @@ def spotcheck_process():
 
 @app.route("/translate-word", methods=["POST"])
 def translate_word():
-    """Translates an individual word or phrase on-demand for hover tooltips."""
+    """Translates an individual word or phrase on-demand for hover tooltips using LRU cache."""
     data = request.get_json() or {}
     raw_word = data.get("word", "").strip()
     if not raw_word:
         return jsonify({"translation": ""})
     
-    clean_word = re.sub(r'^[^\w\s]+|[^\w\s]+$', '', raw_word, flags=re.UNICODE)
+    clean_word = CLEAN_WORD_RE.sub('', raw_word)
     target = clean_word if clean_word else raw_word
     
-    try:
-        translated = argostranslate.translate.translate(target, FROM_CODE, TO_CODE)
-    except Exception as e:
-        translated = target
+    translated = translate_text(target)
         
     return jsonify({"original": raw_word, "clean": target, "translation": translated})
 

@@ -754,8 +754,12 @@
             }
         }
 
-        async function handleSourceWordHover(element, wordToken) {
+        let hoverTimer = null;
+
+        function handleSourceWordHover(element, wordToken) {
             if (!isTranslateHoverEnabled) return;
+            if (hoverTimer) clearTimeout(hoverTimer);
+
             currentHoveredWordEl = element;
             const cleanWord = wordToken.trim().replace(/^[.,!?:;"»“()\s]+|[.,!?:;"»”()\s]+$/g, '');
             if (!cleanWord) return;
@@ -766,15 +770,19 @@
             if (wordTranslationCache[cacheKey]) {
                 renderHoverTooltip(cleanWord, wordTranslationCache[cacheKey], rect);
             } else {
-                renderHoverTooltip(cleanWord, 'Translating...', rect);
-                const translation = await fetchWordTranslation(cleanWord);
-                if (currentHoveredWordEl === element && isTranslateHoverEnabled) {
-                    renderHoverTooltip(cleanWord, translation, rect);
-                }
+                hoverTimer = setTimeout(async () => {
+                    if (currentHoveredWordEl !== element || !isTranslateHoverEnabled) return;
+                    renderHoverTooltip(cleanWord, 'Translating...', rect);
+                    const translation = await fetchWordTranslation(cleanWord);
+                    if (currentHoveredWordEl === element && isTranslateHoverEnabled) {
+                        renderHoverTooltip(cleanWord, translation, rect);
+                    }
+                }, 75);
             }
         }
 
         function handleSourceWordLeave() {
+            if (hoverTimer) clearTimeout(hoverTimer);
             currentHoveredWordEl = null;
             setTimeout(() => {
                 if (!currentHoveredWordEl && !isHoveringTooltip) {
