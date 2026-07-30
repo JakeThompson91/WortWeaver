@@ -1,7 +1,7 @@
-# WortWeaver - Project Context & Developer Guidelines
+# WörtWeaver - Project Context & Developer Guidelines
 
 ## 📌 Project Overview
-**WortWeaver** is a lightweight, privacy-first web application for interactive German-to-English translation spot-checking. It allows translators to review and refine machine-translated text paragraph-by-paragraph with granular editing controls and instant dictionary hover lookups.
+**WörtWeaver** is a lightweight, privacy-first web application for interactive German-to-English translation spot-checking. It allows translators to review and refine machine-translated text paragraph-by-paragraph with granular editing controls and instant dictionary hover lookups.
 
 ---
 

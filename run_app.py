@@ -1,5 +1,5 @@
 """
-Cross-Platform Launcher for WortWeaver
+Cross-Platform Launcher for WörtWeaver
 Automatically detects OS and uses Waitress WSGI server on Windows / production, or Flask dev server.
 """
 
@@ -19,7 +19,7 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 def main():
     print("========================================================")
-    print("             WortWeaver Translation Server              ")
+    print("             WörtWeaver Translation Server              ")
     print("  -> Server Running at: http://127.0.0.1:5000           ")
     print("  (Press Ctrl+C to stop)                                ")
     print("========================================================")

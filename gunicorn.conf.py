@@ -1,4 +1,4 @@
-# Gunicorn Production Configuration for WortWeaver
+# Gunicorn Production Configuration for WörtWeaver
 
 import multiprocessing
 
