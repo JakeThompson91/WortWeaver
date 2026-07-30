@@ -124,13 +124,15 @@
                         
                         <!-- Mode Selector Toggle -->
                         <div class="mode-toggle-group">
-                            <button class="mode-toggle-btn btn-mode-sentence active" id="modeSentenceBtn" onclick="setSelectionMode('sentence')">
+                            <button class="mode-toggle-btn btn-mode-sentence active" id="modeSentenceBtn" onclick="toggleSentenceMode()" title="Press 'S' key to toggle sentence editing mode">
                                 <span class="material-symbols-outlined" style="font-size:18px;">short_text</span>
                                 Sentence Mode <kbd class="mode-kbd">S</kbd>
+                                <span id="sentenceStatusBadge" class="toggle-status-badge status-sentence-on">ON ✓</span>
                             </button>
-                            <button class="mode-toggle-btn btn-mode-word" id="modeWordBtn" onclick="setSelectionMode('word')">
+                            <button class="mode-toggle-btn btn-mode-word" id="modeWordBtn" onclick="toggleWordMode()" title="Press 'W' key to toggle individual word editing mode">
                                 <span class="material-symbols-outlined" style="font-size:18px;">match_case</span>
                                 Word Mode <kbd class="mode-kbd">W</kbd>
+                                <span id="wordStatusBadge" class="toggle-status-badge status-off">OFF</span>
                             </button>
                         </div>
                     </div>
@@ -185,9 +187,10 @@
         let currentChunkIndex = 0;
         let approvalState = {};
         let flagState = {};
-        let currentSelectionMode = 'sentence'; // 'sentence' or 'word'
+        let isSentenceModeEnabled = true; // Defaults to ON
+        let isWordModeEnabled = false;
 
-        // Keyboard Shortcuts for Mode Switching ('s' / 'S' for sentence mode, 'w' / 'W' for word mode)
+        // Keyboard Shortcuts for Mode Switching ('s' / 'S' for sentence mode, 'w' / 'W' for word mode, 't' / 'T' for hover translation)
         document.addEventListener('keydown', (e) => {
             const active = document.activeElement;
             const isEditable = active && (
@@ -200,9 +203,9 @@
 
             const key = e.key.toLowerCase();
             if (key === 's') {
-                setSelectionMode('sentence');
+                toggleSentenceMode();
             } else if (key === 'w') {
-                setSelectionMode('word');
+                toggleWordMode();
             } else if (key === 't') {
                 toggleHoverTranslation();
             }
@@ -300,28 +303,89 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 3. Switch Selection Mode (Sentence vs Word)
-        function setSelectionMode(mode) {
-            currentSelectionMode = mode;
-            
+        // 3. Toggle Selection Modes (Sentence vs Word)
+        function toggleSentenceMode(forceState) {
+            if (typeof forceState === 'boolean') {
+                isSentenceModeEnabled = forceState;
+            } else {
+                isSentenceModeEnabled = !isSentenceModeEnabled;
+            }
+            if (isSentenceModeEnabled) {
+                isWordModeEnabled = false;
+            }
+            updateModeUI();
+        }
+
+        function toggleWordMode(forceState) {
+            if (typeof forceState === 'boolean') {
+                isWordModeEnabled = forceState;
+            } else {
+                isWordModeEnabled = !isWordModeEnabled;
+            }
+            if (isWordModeEnabled) {
+                isSentenceModeEnabled = false;
+            }
+            updateModeUI();
+        }
+
+        function updateModeUI() {
             const sentenceBtn = document.getElementById('modeSentenceBtn');
+            const sentenceBadge = document.getElementById('sentenceStatusBadge');
             const wordBtn = document.getElementById('modeWordBtn');
+            const wordBadge = document.getElementById('wordStatusBadge');
             const viewer = document.getElementById('targetChunkViewer');
             const hint = document.getElementById('modeHint');
 
-            if (mode === 'sentence') {
-                sentenceBtn.classList.add('active');
-                wordBtn.classList.remove('active');
-                viewer.className = 'chunk-viewer mode-sentence';
-                hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Sentence Mode (Press \'S\'):</strong> Click any whole sentence to edit its phrasing.</span>';
+            if (isSentenceModeEnabled) {
+                if (sentenceBtn) sentenceBtn.classList.add('active');
+                if (sentenceBadge) {
+                    sentenceBadge.textContent = 'ON ✓';
+                    sentenceBadge.className = 'toggle-status-badge status-sentence-on';
+                }
+                if (wordBtn) wordBtn.classList.remove('active');
+                if (wordBadge) {
+                    wordBadge.textContent = 'OFF';
+                    wordBadge.className = 'toggle-status-badge status-off';
+                }
+                if (viewer) viewer.className = 'chunk-viewer mode-sentence';
+                if (hint) {
+                    hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Sentence Mode (Press \'S\'):</strong> Click any whole sentence to edit its phrasing.</span>';
+                }
+            } else if (isWordModeEnabled) {
+                if (wordBtn) wordBtn.classList.add('active');
+                if (wordBadge) {
+                    wordBadge.textContent = 'ON ✓';
+                    wordBadge.className = 'toggle-status-badge status-word-on';
+                }
+                if (sentenceBtn) sentenceBtn.classList.remove('active');
+                if (sentenceBadge) {
+                    sentenceBadge.textContent = 'OFF';
+                    sentenceBadge.className = 'toggle-status-badge status-off';
+                }
+                if (viewer) viewer.className = 'chunk-viewer mode-word';
+                if (hint) {
+                    hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Word Mode (Press \'W\'):</strong> Click any individual word to edit or replace it.</span>';
+                }
             } else {
-                wordBtn.classList.add('active');
-                sentenceBtn.classList.remove('active');
-                viewer.className = 'chunk-viewer mode-word';
-                hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Word Mode (Press \'W\'):</strong> Click any individual word to edit or replace it.</span>';
+                if (sentenceBtn) sentenceBtn.classList.remove('active');
+                if (sentenceBadge) {
+                    sentenceBadge.textContent = 'OFF';
+                    sentenceBadge.className = 'toggle-status-badge status-off';
+                }
+                if (wordBtn) wordBtn.classList.remove('active');
+                if (wordBadge) {
+                    wordBadge.textContent = 'OFF';
+                    wordBadge.className = 'toggle-status-badge status-off';
+                }
+                if (viewer) viewer.className = 'chunk-viewer mode-read-only';
+                if (hint) {
+                    hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Editing Disabled:</strong> Sentence and Word Mode are OFF. Press \'S\' or \'W\' to enable interactive editing.</span>';
+                }
             }
 
-            renderCurrentChunk();
+            if (chunksData && chunksData.length > 0) {
+                renderCurrentChunk();
+            }
         }
 
         // 4. Render Active Chunk
@@ -395,7 +459,7 @@
                 p.className = 'paragraph-block';
 
                 para.forEach((sentencePair, sIdx) => {
-                    if (currentSelectionMode === 'sentence') {
+                    if (isSentenceModeEnabled) {
                         // Sentence Mode Rendering
                         const span = document.createElement('span');
                         const isSentenceModified = !!sentencePair.isModified;
@@ -403,7 +467,7 @@
                         span.textContent = sentencePair.translated + ' ';
                         span.onclick = () => editSentence(span, currentChunkIndex, pIdx, sIdx);
                         p.appendChild(span);
-                    } else {
+                    } else if (isWordModeEnabled) {
                         // Word Mode Rendering
                         const words = sentencePair.translated.split(/(\s+)/); // Keep spaces
                         words.forEach((wordToken, wIdx) => {
@@ -419,6 +483,13 @@
                             }
                         });
                         p.appendChild(document.createTextNode(' '));
+                    } else {
+                        // Plain Read-Only Mode (Both OFF)
+                        const span = document.createElement('span');
+                        const isSentenceModified = !!sentencePair.isModified;
+                        span.className = isSentenceModified ? 'unit-modified' : '';
+                        span.textContent = sentencePair.translated + ' ';
+                        p.appendChild(span);
                     }
                 });
 

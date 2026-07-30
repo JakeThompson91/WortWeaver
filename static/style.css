@@ -528,8 +528,19 @@ textarea::-webkit-scrollbar-thumb:hover {
     color: var(--md-sys-color-on-surface-muted);
 }
 
-.toggle-status-badge.status-on {
+.toggle-status-badge.status-on,
+.toggle-status-badge.status-translate-on {
     background: #6750a4;
+    color: #ffffff;
+}
+
+.toggle-status-badge.status-sentence-on {
+    background: #d97706;
+    color: #ffffff;
+}
+
+.toggle-status-badge.status-word-on {
+    background: #0284c7;
     color: #ffffff;
 }
 

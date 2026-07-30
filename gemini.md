@@ -32,10 +32,11 @@
   - Handles `.txt` and `.pdf` file uploads and extracts raw text.
 
 ### 2. Frontend (`templates/index.html`)
-- **State Management**: Manages active chunk index, approval states (`approvalState`), current selection mode (`sentence` vs `word`), and hover translation state (`isTranslateHoverEnabled`).
+- **State Management**: Manages active chunk index, approval states (`approvalState`), independent mode toggle states (`isSentenceModeEnabled`, `isWordModeEnabled`, `isTranslateHoverEnabled`), and word translation cache (`wordTranslationCache`).
 - **Interactive Editing**:
-  - **Sentence Mode** (`S` key): Renders whole translated sentences as clickable units. Clicking opens an inline text input to edit phrasing.
-  - **Word Mode** (`W` key): Splits target sentences into individual tokens. Clicking a word opens an input box to update specific words.
+  - **Sentence Mode** (`S` key / ON badge): Toggles whole-sentence editing. Clicking any sentence opens an inline text input to edit phrasing.
+  - **Word Mode** (`W` key / ON badge): Toggles individual word replacement. Clicking a word opens an input box to update specific words.
+  - **Read-Only State**: When both Sentence Mode and Word Mode are toggled OFF, target text is presented in clean read-only view.
 - **Hover Translation & Dictionary** (`T` key):
   - When enabled (`isTranslateHoverEnabled = true`), hovering over any German word in the Original panel fetches or uses cached word translations (`wordTranslationCache`).
   - Displays a floating popover above the word with the translation and a `Google ↗` deep link.
