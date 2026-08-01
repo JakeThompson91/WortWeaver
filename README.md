@@ -118,41 +118,6 @@ local-translation-app/
 ├── LICENSE                 # MIT License
 └── README.md               # Documentation
 ```
-
----
-
-## 🌿 Git Workflow & Versioning Best Practices
-
-WörtWeaver follows professional Git development practices:
-
-### Branching Model
-- **`main`**: Represents production-ready, stable releases. Protected from direct commits.
-- **`feature/*` / `fix/*`**: All active feature development and bug fixes take place in dedicated topic branches (e.g. `feature/performance-optimizations`).
-
-### Conventional Commits
-Commit messages strictly follow the [Conventional Commits specification](https://www.conventionalcommits.org/):
-- `feat:` New feature or UI capability
-- `perf:` Performance optimizations or speed improvements
-- `fix:` Bug fixes
-- `docs:` Documentation updates
-- `style:` Formatting or design system updates
-
-### Semantic Versioning & Tags
-Releases are marked with annotated semantic version tags (`vMAJOR.MINOR.PATCH`):
-- **`v1.0.0`**: Initial release with interactive spot-checking UI and Material Design 3 theme.
-- **`v1.1.0`**: Multi-threaded sentence translation, model pre-warming, LRU caching, and debounced hover lookups.
-
-To check version tags locally:
-```bash
-git tag -n
-```
-
-To create a new release tag:
-```bash
-git tag -a v1.2.0 -m "v1.2.0: Description of release changes"
-git push origin v1.2.0
-```
-
 ---
 
 ## 📄 License
