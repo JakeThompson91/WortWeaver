@@ -81,6 +81,10 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Language Pack Install Prompt Banner -->
+                <div id="langPromptBanner" class="lang-prompt-banner" style="display: none;"></div>
+
                 <textarea id="rawSourceText" placeholder="Paste German text here or upload a file..."></textarea>
                 
                 <!-- Centered Start Spot-Check Button -->
@@ -203,6 +207,7 @@
 
         let selectedFromCode = 'de';
         let selectedFromName = 'German';
+        let installedLanguageCodes = ['de'];
         let supportedLanguages = [
             { code: 'de', name: 'German', default: true },
             { code: 'fr', name: 'French' },
@@ -227,8 +232,9 @@
             { code: 'hi', name: 'Hindi' }
         ];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSupportedLanguages();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSupportedLanguages();
+            await fetchInstalledPackages();
         });
 
         async function loadSupportedLanguages() {
@@ -284,6 +290,84 @@
 
             const rawSourceText = document.getElementById('rawSourceText');
             if (rawSourceText) rawSourceText.placeholder = `Paste ${selectedFromName} text here or upload a file...`;
+
+            checkLanguagePackPrompt();
+        }
+
+        function checkLanguagePackPrompt() {
+            const banner = document.getElementById('langPromptBanner');
+            if (!banner) return;
+
+            const isInstalled = installedLanguageCodes.includes(selectedFromCode);
+            if (!isInstalled) {
+                banner.className = 'lang-prompt-banner';
+                banner.innerHTML = `
+                    <div class="lang-prompt-text">
+                        <span class="material-symbols-outlined" style="font-size:22px; color:var(--md-sys-color-warning);">warning</span>
+                        <span><strong>Language pack not installed:</strong> The <strong>${selectedFromName}</strong> translation package is not installed (~100 MB).</span>
+                    </div>
+                    <div class="lang-prompt-actions">
+                        <button class="btn btn-warning" id="mainInstallLangBtn" style="padding: 4px 14px; font-size: 0.84rem; min-height: 34px;" onclick="installSelectedLanguagePack('${selectedFromCode}')">
+                            <span class="material-symbols-outlined" style="font-size:18px;">download</span> Install ${selectedFromName} Pack
+                        </button>
+                    </div>
+                `;
+                banner.style.display = 'flex';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        async function installSelectedLanguagePack(code) {
+            const targetCode = code || selectedFromCode;
+            const match = supportedLanguages.find(l => l.code === targetCode);
+            const langName = match ? match.name : targetCode;
+
+            const btn = document.getElementById('mainInstallLangBtn');
+            const banner = document.getElementById('langPromptBanner');
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Installing...';
+            }
+
+            try {
+                const response = await fetch('/install-language', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ from_code: targetCode })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    installedLanguageCodes = data.installed_codes || [];
+                    if (!installedLanguageCodes.includes(targetCode)) {
+                        installedLanguageCodes.push(targetCode);
+                    }
+                    if (banner) {
+                        banner.className = 'lang-prompt-banner success-state';
+                        banner.innerHTML = `
+                            <div class="lang-prompt-text">
+                                <span class="material-symbols-outlined" style="font-size:22px; color:var(--md-sys-color-success);">check_circle</span>
+                                <span><strong>Success:</strong> ${langName} language pack installed successfully! Ready for spot-checking.</span>
+                            </div>
+                        `;
+                        banner.style.display = 'flex';
+                        setTimeout(() => {
+                            checkLanguagePackPrompt();
+                        }, 3500);
+                    }
+                    if (typeof fetchInstalledPackages === 'function') {
+                        fetchInstalledPackages();
+                    }
+                } else {
+                    alert(data.error || `Failed to install ${langName} language pack.`);
+                    checkLanguagePackPrompt();
+                }
+            } catch (err) {
+                alert(`Network error installing ${langName} language pack.`);
+                checkLanguagePackPrompt();
+            }
         }
 
         // Keyboard Shortcuts for Mode Switching ('s' / 'S' for sentence mode, 'w' / 'W' for word mode, 't' / 'T' for hover translation)
@@ -342,6 +426,22 @@
             if (!rawText.trim()) {
                 alert(`Please enter or upload ${selectedFromName} text first.`);
                 return;
+            }
+
+            if (!installedLanguageCodes.includes(selectedFromCode)) {
+                checkLanguagePackPrompt();
+                const banner = document.getElementById('langPromptBanner');
+                if (banner) {
+                    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (confirm(`The language pack for ${selectedFromName} is not installed (~100 MB). Would you like to download and install it now?`)) {
+                    await installSelectedLanguagePack(selectedFromCode);
+                    if (!installedLanguageCodes.includes(selectedFromCode)) {
+                        return;
+                    }
+                } else {
+                    return;
+                }
             }
 
             const startBtn = document.getElementById('startBtn');
@@ -1040,15 +1140,17 @@
         async function fetchInstalledPackages() {
             const pkgListEl = document.getElementById('installedPkgList');
             if (!pkgListEl) return;
-            pkgListEl.innerHTML = '<div style="text-align:center; padding: 1.5rem; color:var(--md-sys-color-on-surface-muted);"><span class="material-symbols-outlined" style="animation: spin 1s linear infinite; vertical-align: middle;">sync</span> Checking installed packages...</div>';
+            pkgListEl.innerHTML = '<div style="text-align:center; padding: 1.5rem; color:var(--md-sys-color-on-surface-muted);"><span class="material-symbols-outlined" style="animation: spin 1s linear infinite; vertical-align: middle;">sync</span> Checking language packages...</div>';
             
             try {
                 const response = await fetch('/installed-languages');
                 const data = await response.json();
                 currentInstalledPackages = data.packages || [];
+                installedLanguageCodes = data.installed_codes || [];
                 renderInstalledPackageList();
+                checkLanguagePackPrompt();
             } catch (e) {
-                pkgListEl.innerHTML = '<div style="text-align:center; padding: 1rem; color:var(--md-sys-color-error);">Failed to load installed packages.</div>';
+                pkgListEl.innerHTML = '<div style="text-align:center; padding: 1rem; color:var(--md-sys-color-error);">Failed to load language packages.</div>';
             }
         }
 
@@ -1057,51 +1159,150 @@
             if (!pkgListEl) return;
             pkgListEl.innerHTML = '';
 
-            if (currentInstalledPackages.length === 0) {
-                pkgListEl.innerHTML = '<div style="text-align:center; padding: 1.5rem; color:var(--md-sys-color-on-surface-muted);">No language packages currently installed.</div>';
-                return;
-            }
+            supportedLanguages.forEach(lang => {
+                const isInstalled = installedLanguageCodes.includes(lang.code);
+                const isDefault = (lang.code === 'de');
 
-            currentInstalledPackages.forEach(pkg => {
                 const item = document.createElement('div');
                 item.className = 'installed-pkg-item';
 
                 const label = document.createElement('label');
                 label.className = 'installed-pkg-label';
 
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = pkg.from_code;
-                checkbox.className = 'pkg-checkbox';
-                if (pkg.is_default) {
+                if (isInstalled && !isDefault) {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = lang.code;
+                    checkbox.className = 'pkg-checkbox';
+                    label.appendChild(checkbox);
+                } else if (isDefault) {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = lang.code;
+                    checkbox.className = 'pkg-checkbox';
                     checkbox.dataset.isDefault = 'true';
+                    label.appendChild(checkbox);
+                } else {
+                    const spaceSpan = document.createElement('span');
+                    spaceSpan.style.width = '18px';
+                    spaceSpan.style.display = 'inline-block';
+                    label.appendChild(spaceSpan);
                 }
 
-                const langMatch = supportedLanguages.find(l => l.code === pkg.from_code);
-                const langName = langMatch ? langMatch.name : (pkg.from_name || pkg.from_code);
-
-                label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(`${langName} (${pkg.from_code} ➔ ${pkg.to_code})`));
+                label.appendChild(document.createTextNode(`${lang.name} (${lang.code} ➔ en)`));
 
                 const meta = document.createElement('div');
                 meta.className = 'installed-pkg-meta';
 
-                if (pkg.is_default) {
+                if (isDefault) {
                     const defaultBadge = document.createElement('span');
                     defaultBadge.className = 'pkg-badge-default';
                     defaultBadge.textContent = 'Default';
                     meta.appendChild(defaultBadge);
                 }
 
-                const sizeBadge = document.createElement('span');
-                sizeBadge.className = 'pkg-badge-size';
-                sizeBadge.textContent = '~100 MB';
-                meta.appendChild(sizeBadge);
+                const statusBadge = document.createElement('span');
+                statusBadge.className = isInstalled ? 'pkg-badge-installed' : 'pkg-badge-uninstalled';
+                statusBadge.textContent = isInstalled ? 'Installed ✓' : 'Not Installed';
+                meta.appendChild(statusBadge);
+
+                const actionBtn = document.createElement('button');
+                actionBtn.type = 'button';
+                if (isInstalled) {
+                    actionBtn.className = 'btn btn-outline';
+                    actionBtn.style.padding = '2px 10px';
+                    actionBtn.style.fontSize = '0.78rem';
+                    actionBtn.style.minHeight = '28px';
+                    actionBtn.style.color = 'var(--md-sys-color-error)';
+                    actionBtn.title = `Uninstall ${lang.name} package`;
+                    actionBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">delete</span> Uninstall';
+                    actionBtn.onclick = () => uninstallSingleLanguage(lang.code, lang.name);
+                } else {
+                    actionBtn.className = 'btn';
+                    actionBtn.style.padding = '2px 12px';
+                    actionBtn.style.fontSize = '0.78rem';
+                    actionBtn.style.minHeight = '28px';
+                    actionBtn.id = `modalInstallBtn-${lang.code}`;
+                    actionBtn.title = `Download and install ${lang.name} package (~100 MB)`;
+                    actionBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">download</span> Install';
+                    actionBtn.onclick = () => installSingleLanguage(lang.code, lang.name);
+                }
+                meta.appendChild(actionBtn);
 
                 item.appendChild(label);
                 item.appendChild(meta);
                 pkgListEl.appendChild(item);
             });
+        }
+
+        async function installSingleLanguage(code, name) {
+            const banner = document.getElementById('modalStatusBanner');
+            const btn = document.getElementById(`modalInstallBtn-${code}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite; font-size:16px;">sync</span> Installing...';
+            }
+
+            try {
+                const response = await fetch('/install-language', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ from_code: code })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    if (banner) {
+                        banner.className = 'modal-status-banner success';
+                        banner.innerHTML = `<span class="material-symbols-outlined">check_circle</span> ${result.message}`;
+                        banner.style.display = 'flex';
+                    }
+                    await fetchInstalledPackages();
+                } else {
+                    if (banner) {
+                        banner.className = 'modal-status-banner error';
+                        banner.innerHTML = `<span class="material-symbols-outlined">error</span> ${result.error || 'Failed to install package.'}`;
+                        banner.style.display = 'flex';
+                    }
+                }
+            } catch (err) {
+                if (banner) {
+                    banner.className = 'modal-status-banner error';
+                    banner.innerHTML = '<span class="material-symbols-outlined">error</span> Network error while installing package.';
+                    banner.style.display = 'flex';
+                }
+            }
+        }
+
+        async function uninstallSingleLanguage(code, name) {
+            const banner = document.getElementById('modalStatusBanner');
+            try {
+                const response = await fetch('/uninstall-languages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codes: [code] })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    if (banner) {
+                        banner.className = 'modal-status-banner success';
+                        banner.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Uninstalled ${name} language pack.`;
+                        banner.style.display = 'flex';
+                    }
+                    await fetchInstalledPackages();
+                } else {
+                    if (banner) {
+                        banner.className = 'modal-status-banner error';
+                        banner.innerHTML = `<span class="material-symbols-outlined">error</span> ${result.error || 'Failed to uninstall package.'}`;
+                        banner.style.display = 'flex';
+                    }
+                }
+            } catch (err) {
+                if (banner) {
+                    banner.className = 'modal-status-banner error';
+                    banner.innerHTML = '<span class="material-symbols-outlined">error</span> Network error while uninstalling package.';
+                    banner.style.display = 'flex';
+                }
+            }
         }
 
         function selectAllNonDefaultPacks() {
@@ -1124,7 +1325,7 @@
             if (checked.length === 0) {
                 if (banner) {
                     banner.className = 'modal-status-banner error';
-                    banner.innerHTML = '<span class="material-symbols-outlined">info</span> Please select at least one language package to uninstall.';
+                    banner.innerHTML = '<span class="material-symbols-outlined">info</span> Please select at least one installed language package to uninstall.';
                     banner.style.display = 'flex';
                 }
                 return;

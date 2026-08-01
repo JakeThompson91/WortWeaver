@@ -184,10 +184,11 @@ def get_languages():
 
 @app.route("/installed-languages", methods=["GET"])
 def get_installed_languages():
-    """Returns a list of currently installed ArgosTranslate language packages."""
+    """Returns a list of currently installed ArgosTranslate language packages and installed language codes."""
     try:
         installed_pkgs = argostranslate.package.get_installed_packages()
         pkg_list = []
+        installed_codes = set()
         for p in installed_pkgs:
             pkg_list.append({
                 "from_code": p.from_code,
@@ -196,10 +197,51 @@ def get_installed_languages():
                 "to_name": getattr(p, "to_name", p.to_code),
                 "is_default": (p.from_code == DEFAULT_FROM_CODE)
             })
-        return jsonify({"packages": pkg_list})
+            installed_codes.add(p.from_code)
+        return jsonify({
+            "packages": pkg_list,
+            "installed_codes": list(installed_codes)
+        })
     except Exception as e:
         logging.error(f"Error fetching installed language packages: {e}")
-        return jsonify({"packages": [], "error": str(e)}), 500
+        return jsonify({"packages": [], "installed_codes": [], "error": str(e)}), 500
+
+@app.route("/install-language", methods=["POST"])
+def install_language():
+    """Manually downloads and installs an ArgosTranslate language package."""
+    data = request.get_json() or {}
+    from_code = data.get("from_code")
+    
+    if not from_code:
+        return jsonify({"success": False, "error": "No language code provided."}), 400
+
+    lang_match = next((l for l in SUPPORTED_LANGUAGES if l["code"] == from_code), None)
+    lang_name = lang_match["name"] if lang_match else from_code
+
+    try:
+        success = ensure_language_package(from_code, TO_CODE)
+        if success:
+            key = (from_code, TO_CODE)
+            if key in _TRANSLATION_MODELS:
+                _TRANSLATION_MODELS.pop(key, None)
+            translate_text.cache_clear()
+
+            installed_pkgs = argostranslate.package.get_installed_packages()
+            installed_codes = list(set([p.from_code for p in installed_pkgs]))
+
+            return jsonify({
+                "success": True,
+                "message": f"Successfully installed language pack for {lang_name} ({from_code} → {TO_CODE}).",
+                "installed_codes": installed_codes
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": f"Language package for {lang_name} ({from_code}) could not be found or downloaded."
+            }), 400
+    except Exception as e:
+        logging.error(f"Error installing language package {from_code}: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route("/uninstall-languages", methods=["POST"])
 def uninstall_languages():
@@ -223,15 +265,20 @@ def uninstall_languages():
 
         translate_text.cache_clear()
         
+        remaining_pkgs = argostranslate.package.get_installed_packages()
+        remaining_codes = list(set([p.from_code for p in remaining_pkgs]))
+
         logging.info(f"Successfully uninstalled language packs: {uninstalled}")
         return jsonify({
             "success": True,
             "uninstalled": uninstalled,
+            "installed_codes": remaining_codes,
             "message": f"Successfully uninstalled {len(uninstalled)} language pack(s)."
         })
     except Exception as e:
         logging.error(f"Error uninstalling language packages: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 @app.route("/spotcheck-process", methods=["POST"])
