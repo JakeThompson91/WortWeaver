@@ -107,7 +107,8 @@ body {
 
 /* Material Header / Top Hero Card */
 header {
-    margin-bottom: 2rem;
+    max-width: 1000px;
+    margin: 0 auto 2rem auto;
     text-align: center;
     display: flex;
     flex-direction: column;
