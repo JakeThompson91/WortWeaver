@@ -1,6 +1,6 @@
 # WörtWeaver - Interactive Granular Translation Spot-Checker
 
-A modern, web-based tool for interactive, paragraph-by-paragraph spot-checking and editing of German to English translations using local machine translation models.
+A modern, web-based tool for interactive, paragraph-by-paragraph spot-checking and editing of translations to English using local machine translation models (defaulting to German, with options for French, Spanish, Italian, and more).
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 ![Flask](https://img.shields.io/badge/Framework-Flask-green)
@@ -11,12 +11,13 @@ A modern, web-based tool for interactive, paragraph-by-paragraph spot-checking a
 ## ✨ Features
 
 - 🔍 **Granular Spot-Checking Workspace**: Automatically segments documents into structured paragraph chunks for efficient review.
+- 🌐 **Multi-Language Support**: Defaults to German ➔ English, while allowing users to select French, Spanish, Italian, Portuguese, Dutch, Russian, Chinese, Japanese, and more.
 - 🎨 **Distinct Editing Modes**:
   - **Sentence Mode** (`S` key / Warm Amber Theme): Click any translated sentence to edit its phrasing.
   - **Word Mode** (`W` key / Sky Blue Theme): Click individual target words to make pinpoint edits.
 - 💡 **Instant Hover Word Translation** (`T` key / Vibrant Violet Theme):
   - Disabled by default for clean reading. Press **`T`** or click the header button to toggle ON/OFF.
-  - Hover over any German source word (or highlight text) to view instant local translations in an inline tooltip.
+  - Hover over any source word (or highlight text) to view instant local translations in an inline tooltip.
   - Quick `Google ↗` link in tooltips to open deep-linked searches on Google Translate.
 - 📜 **Enhanced Dual Panel Navigation**: Scrollable containers with high-contrast custom scrollbars for navigating long texts.
 - 📄 **Document Upload**: Supports uploading raw text (`.txt`) and PDF (`.pdf`) files.

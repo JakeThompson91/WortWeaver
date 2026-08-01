@@ -22,11 +22,11 @@
                     <span class="brand-name">WörtWeaver</span>
                 </h1>
                 <span class="lang-chip">
-                    <span class="material-symbols-outlined">swap_horiz</span> German ➔ English
+                    <span class="material-symbols-outlined">swap_horiz</span> <span id="headerLangText">German ➔ English</span>
                 </span>
                 <span class="beta-badge">BETA</span>
             </div>
-            <p>Spot-check German translations paragraph by paragraph with granular sentence and word controls.</p>
+            <p>Spot-check <span id="headerDescLang">German</span> translations paragraph by paragraph with granular sentence and word controls.</p>
         </header>
 
         <!-- Drag & Drop Upload Card -->
@@ -45,9 +45,17 @@
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">
-                        <span class="material-symbols-outlined">description</span> Source Text (German)
+                        <span class="material-symbols-outlined">description</span> Source Text (<span id="sourcePanelLang">German</span>)
                     </div>
                     <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <label for="sourceLangSelect" style="font-size: 0.84rem; font-weight: 500; color: var(--md-sys-color-on-surface-muted); display: flex; align-items: center; gap: 4px;">
+                                <span class="material-symbols-outlined" style="font-size:18px;">language</span> Source Language:
+                            </label>
+                            <select id="sourceLangSelect" onchange="updateSelectedLanguage()" title="Select source language to translate from">
+                                <option value="de" selected>German (Default)</option>
+                            </select>
+                        </div>
                         <div style="display: flex; align-items: center; gap: 0.4rem;">
                             <label for="chunkSizeSelect" style="font-size: 0.84rem; font-weight: 500; color: var(--md-sys-color-on-surface-muted); display: flex; align-items: center; gap: 4px;">
                                 <span class="material-symbols-outlined" style="font-size:18px;">tune</span> Chunk Size:
@@ -65,7 +73,7 @@
                                 <option value="10">10 Paragraphs</option>
                             </select>
                         </div>
-                        <button class="btn btn-outline" onclick="clearSourceText()" style="padding: 4px 12px; font-size: 0.82rem; min-height: 32px;" title="Clear German source text">
+                        <button class="btn btn-outline" onclick="clearSourceText()" style="padding: 4px 12px; font-size: 0.82rem; min-height: 32px;" title="Clear source text">
                             <span class="material-symbols-outlined" style="font-size:18px;">delete</span> Clear Text
                         </button>
                     </div>
@@ -90,13 +98,13 @@
             <!-- Chunk Quick Jump Pagination Bar -->
             <div class="chunk-pagination-bar" id="chunkPaginationNav"></div>
 
-            <!-- Workspace Panel (Original German & Translated English) -->
+            <!-- Workspace Panel (Original Source & Translated English) -->
             <div class="workspace-grid">
-                <!-- German Source Column -->
+                <!-- Source Column -->
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
-                            <span class="material-symbols-outlined">translate</span> Original German
+                            <span class="material-symbols-outlined">translate</span> Original <span id="workspaceSourceLang">German</span>
                         </div>
                         
                         <!-- Translate Mode Toggle -->
@@ -190,6 +198,91 @@
         let isSentenceModeEnabled = true; // Defaults to ON
         let isWordModeEnabled = false;
 
+        let selectedFromCode = 'de';
+        let selectedFromName = 'German';
+        let supportedLanguages = [
+            { code: 'de', name: 'German', default: true },
+            { code: 'fr', name: 'French' },
+            { code: 'es', name: 'Spanish' },
+            { code: 'it', name: 'Italian' },
+            { code: 'pt', name: 'Portuguese' },
+            { code: 'nl', name: 'Dutch' },
+            { code: 'ru', name: 'Russian' },
+            { code: 'zh', name: 'Chinese' },
+            { code: 'ja', name: 'Japanese' },
+            { code: 'ko', name: 'Korean' },
+            { code: 'pl', name: 'Polish' },
+            { code: 'ar', name: 'Arabic' },
+            { code: 'tr', name: 'Turkish' },
+            { code: 'uk', name: 'Ukrainian' },
+            { code: 'sv', name: 'Swedish' },
+            { code: 'da', name: 'Danish' },
+            { code: 'fi', name: 'Finnish' },
+            { code: 'cs', name: 'Czech' },
+            { code: 'hu', name: 'Hungarian' },
+            { code: 'el', name: 'Greek' },
+            { code: 'hi', name: 'Hindi' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSupportedLanguages();
+        });
+
+        async function loadSupportedLanguages() {
+            try {
+                const response = await fetch('/languages');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.languages && data.languages.length > 0) {
+                        supportedLanguages = data.languages;
+                    }
+                }
+            } catch (e) {
+                console.warn('Using fallback language list:', e);
+            }
+            populateLanguageDropdown();
+        }
+
+        function populateLanguageDropdown() {
+            const select = document.getElementById('sourceLangSelect');
+            if (!select) return;
+            select.innerHTML = '';
+            supportedLanguages.forEach(lang => {
+                const opt = document.createElement('option');
+                opt.value = lang.code;
+                opt.textContent = lang.name + (lang.code === 'de' ? ' (Default)' : '');
+                if (lang.code === selectedFromCode) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+            updateSelectedLanguage();
+        }
+
+        function updateSelectedLanguage() {
+            const select = document.getElementById('sourceLangSelect');
+            if (select) {
+                selectedFromCode = select.value;
+                const match = supportedLanguages.find(l => l.code === selectedFromCode);
+                selectedFromName = match ? match.name : 'German';
+            }
+
+            const headerLangText = document.getElementById('headerLangText');
+            if (headerLangText) headerLangText.textContent = `${selectedFromName} ➔ English`;
+
+            const headerDescLang = document.getElementById('headerDescLang');
+            if (headerDescLang) headerDescLang.textContent = selectedFromName;
+
+            const sourcePanelLang = document.getElementById('sourcePanelLang');
+            if (sourcePanelLang) sourcePanelLang.textContent = selectedFromName;
+
+            const workspaceSourceLang = document.getElementById('workspaceSourceLang');
+            if (workspaceSourceLang) workspaceSourceLang.textContent = selectedFromName;
+
+            const rawSourceText = document.getElementById('rawSourceText');
+            if (rawSourceText) rawSourceText.placeholder = `Paste ${selectedFromName} text here or upload a file...`;
+        }
+
         // Keyboard Shortcuts for Mode Switching ('s' / 'S' for sentence mode, 'w' / 'W' for word mode, 't' / 'T' for hover translation)
         document.addEventListener('keydown', (e) => {
             const active = document.activeElement;
@@ -244,7 +337,7 @@
         async function initializeSpotCheck() {
             const rawText = document.getElementById('rawSourceText').value;
             if (!rawText.trim()) {
-                alert('Please enter or upload German text first.');
+                alert(`Please enter or upload ${selectedFromName} text first.`);
                 return;
             }
 
@@ -259,7 +352,11 @@
                 const response = await fetch('/spotcheck-process', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: rawText, chunk_size: chunkSize })
+                    body: JSON.stringify({
+                        text: rawText,
+                        chunk_size: chunkSize,
+                        from_code: selectedFromCode
+                    })
                 });
 
                 const result = await response.json();
@@ -419,7 +516,7 @@
                 if (flagBtn) flagBtn.innerHTML = '<span class="material-symbols-outlined">flag</span> Flag Chunk';
             }
 
-            // German Source
+            // Original Source Column
             const sourceViewer = document.getElementById('sourceChunkViewer');
             sourceViewer.innerHTML = '';
             chunk.paragraphs.forEach(para => {
@@ -749,7 +846,7 @@
             if (alertBox) alertBox.style.display = 'none';
         }
 
-        // 8. Hover Word Translation & Floating Tooltip for Original German Panel
+        // 8. Hover Word Translation & Floating Tooltip for Original Source Panel
         let isTranslateHoverEnabled = false;
 
         function toggleHoverTranslation(forceState) {
@@ -772,7 +869,7 @@
                 }
                 if (sourceViewer) sourceViewer.classList.add('mode-translate-active');
                 if (hint) {
-                    hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Translate Hover (Press \'T\'):</strong> Hover over any German word or select text to view instant translation.</span>';
+                    hint.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Translate Hover (Press 'T'):</strong> Hover over any ${selectedFromName} word or select text to view instant translation.</span>`;
                 }
             } else {
                 if (btn) btn.classList.remove('active');
@@ -782,7 +879,7 @@
                 }
                 if (sourceViewer) sourceViewer.classList.remove('mode-translate-active');
                 if (hint) {
-                    hint.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Translate Hover (Press \'T\'):</strong> Disabled. Press \'T\' or click toggle to inspect word translations on hover.</span>';
+                    hint.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px; color:var(--md-sys-color-primary);">lightbulb</span> <span><strong>Translate Hover (Press 'T'):</strong> Disabled. Press 'T' or click toggle to inspect word translations on hover.</span>`;
                 }
                 hideHoverTranslationTooltip();
             }
@@ -805,7 +902,7 @@
         });
 
         async function fetchWordTranslation(cleanWord) {
-            const cacheKey = cleanWord.toLowerCase();
+            const cacheKey = `${selectedFromCode}:${cleanWord.toLowerCase()}`;
             if (wordTranslationCache[cacheKey]) {
                 return wordTranslationCache[cacheKey];
             }
@@ -814,7 +911,7 @@
                 const response = await fetch('/translate-word', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ word: cleanWord })
+                    body: JSON.stringify({ word: cleanWord, from_code: selectedFromCode })
                 });
                 const data = await response.json();
                 const translation = data.translation || cleanWord;
@@ -836,7 +933,7 @@
             if (!cleanWord) return;
 
             const rect = element.getBoundingClientRect();
-            const cacheKey = cleanWord.toLowerCase();
+            const cacheKey = `${selectedFromCode}:${cleanWord.toLowerCase()}`;
             
             if (wordTranslationCache[cacheKey]) {
                 renderHoverTooltip(cleanWord, wordTranslationCache[cacheKey], rect);
@@ -863,7 +960,7 @@
         }
 
         function renderHoverTooltip(origText, translationText, rect) {
-            const googleUrl = `https://translate.google.com/?sl=de&tl=en&text=${encodeURIComponent(origText)}&op=translate`;
+            const googleUrl = `https://translate.google.com/?sl=${encodeURIComponent(selectedFromCode)}&tl=en&text=${encodeURIComponent(origText)}&op=translate`;
             
             gtTooltip.innerHTML = `
                 <span class="orig-term">"${origText}"</span>
