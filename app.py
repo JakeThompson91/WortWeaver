@@ -182,6 +182,58 @@ def get_languages():
         "default": DEFAULT_FROM_CODE
     })
 
+@app.route("/installed-languages", methods=["GET"])
+def get_installed_languages():
+    """Returns a list of currently installed ArgosTranslate language packages."""
+    try:
+        installed_pkgs = argostranslate.package.get_installed_packages()
+        pkg_list = []
+        for p in installed_pkgs:
+            pkg_list.append({
+                "from_code": p.from_code,
+                "from_name": getattr(p, "from_name", p.from_code),
+                "to_code": p.to_code,
+                "to_name": getattr(p, "to_name", p.to_code),
+                "is_default": (p.from_code == DEFAULT_FROM_CODE)
+            })
+        return jsonify({"packages": pkg_list})
+    except Exception as e:
+        logging.error(f"Error fetching installed language packages: {e}")
+        return jsonify({"packages": [], "error": str(e)}), 500
+
+@app.route("/uninstall-languages", methods=["POST"])
+def uninstall_languages():
+    """Uninstalls specified ArgosTranslate language packages to free up local disk space."""
+    data = request.get_json() or {}
+    codes_to_remove = data.get("codes", [])
+
+    if not codes_to_remove:
+        return jsonify({"success": False, "message": "No language codes provided."}), 400
+
+    uninstalled = []
+    try:
+        installed_pkgs = argostranslate.package.get_installed_packages()
+        for p in installed_pkgs:
+            if p.from_code in codes_to_remove and p.to_code == TO_CODE:
+                argostranslate.package.uninstall(p)
+                uninstalled.append(p.from_code)
+                key = (p.from_code, p.to_code)
+                if key in _TRANSLATION_MODELS:
+                    _TRANSLATION_MODELS.pop(key, None)
+
+        translate_text.cache_clear()
+        
+        logging.info(f"Successfully uninstalled language packs: {uninstalled}")
+        return jsonify({
+            "success": True,
+            "uninstalled": uninstalled,
+            "message": f"Successfully uninstalled {len(uninstalled)} language pack(s)."
+        })
+    except Exception as e:
+        logging.error(f"Error uninstalling language packages: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.route("/spotcheck-process", methods=["POST"])
 def spotcheck_process():
     """Processes input text into paragraph chunks and sentence pairs with parallel multi-threaded translation."""

@@ -934,3 +934,210 @@ textarea::-webkit-scrollbar-thumb:hover {
         justify-content: center;
     }
 }
+
+/* Material 3 Language Manager Modal Dialog */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-card {
+    background: var(--md-sys-color-surface);
+    width: 100%;
+    max-width: 560px;
+    border-radius: var(--md-corner-xl);
+    padding: 1.75rem 2rem;
+    box-shadow: var(--md-elevation-4);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    animation: modalSlideUp 0.25s var(--md-motion-decelerate);
+}
+
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    margin-bottom: 1rem;
+}
+
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    color: var(--md-sys-color-on-surface-muted);
+    cursor: pointer;
+    border-radius: var(--md-corner-full);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.modal-close-btn:hover {
+    background: var(--md-sys-color-surface-dim);
+    color: var(--md-sys-color-on-surface);
+}
+
+.modal-body-desc {
+    font-size: 0.92rem;
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.installed-pkg-list {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-corner-m);
+    padding: 0.5rem;
+    background: var(--md-sys-color-surface-container);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.installed-pkg-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--md-corner-s);
+    transition: background 0.15s ease;
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.installed-pkg-item:hover {
+    background: #f0f4fe;
+    border-color: #c3d7fa;
+}
+
+.installed-pkg-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.93rem;
+    color: var(--md-sys-color-on-surface);
+    flex-grow: 1;
+    user-select: none;
+}
+
+.installed-pkg-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--md-sys-color-primary);
+    cursor: pointer;
+}
+
+.installed-pkg-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pkg-badge-default {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--md-corner-full);
+}
+
+.pkg-badge-size {
+    background: var(--md-sys-color-surface-dim);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--md-corner-full);
+}
+
+.quick-select-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 0.75rem;
+    font-size: 0.83rem;
+    padding: 0 4px;
+}
+
+.quick-select-link {
+    color: var(--md-sys-color-primary);
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    transition: color 0.15s ease;
+}
+
+.quick-select-link:hover {
+    color: var(--md-sys-color-primary-hover);
+}
+
+.modal-status-banner {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--md-corner-m);
+    font-size: 0.88rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-status-banner.success {
+    background: var(--md-sys-color-success-container);
+    color: var(--md-sys-color-on-success-container);
+    border: 1px solid rgba(20, 108, 46, 0.2);
+}
+
+.modal-status-banner.error {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    border: 1px solid rgba(179, 38, 30, 0.2);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
