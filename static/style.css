@@ -107,7 +107,7 @@ body {
 
 /* Material Header / Top Hero Card */
 header {
-    max-width: 1000px;
+    max-width: 1240px;
     margin: 0 auto 2rem auto;
     text-align: center;
     display: flex;
@@ -219,7 +219,7 @@ header p {
     margin-bottom: 1.5rem;
     cursor: pointer;
     box-shadow: var(--md-elevation-1);
-    max-width: 1000px;
+    max-width: 1240px;
     margin: 0 auto 1.5rem auto;
     transition: all 0.25s var(--md-motion-standard);
     display: flex;
