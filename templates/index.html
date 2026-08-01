@@ -73,6 +73,9 @@
                                 <option value="10">10 Paragraphs</option>
                             </select>
                         </div>
+                        <button class="btn btn-outline" onclick="openLanguageManagerModal()" style="padding: 4px 12px; font-size: 0.82rem; min-height: 32px;" title="Manage installed language packs and free up disk space">
+                            <span class="material-symbols-outlined" style="font-size:18px;">cleaning_services</span> Manage Storage
+                        </button>
                         <button class="btn btn-outline" onclick="clearSourceText()" style="padding: 4px 12px; font-size: 0.82rem; min-height: 32px;" title="Clear source text">
                             <span class="material-symbols-outlined" style="font-size:18px;">delete</span> Clear Text
                         </button>
@@ -1017,6 +1020,191 @@
                 hideHoverTranslationTooltip();
             }
         }, true);
+
+        // 9. Language Manager & Storage Cleanup Modal Logic
+        async function openLanguageManagerModal() {
+            const modal = document.getElementById('languageManagerModal');
+            const banner = document.getElementById('modalStatusBanner');
+            if (banner) banner.style.display = 'none';
+            if (modal) modal.style.display = 'flex';
+            await fetchInstalledPackages();
+        }
+
+        function closeLanguageManagerModal() {
+            const modal = document.getElementById('languageManagerModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        let currentInstalledPackages = [];
+
+        async function fetchInstalledPackages() {
+            const pkgListEl = document.getElementById('installedPkgList');
+            if (!pkgListEl) return;
+            pkgListEl.innerHTML = '<div style="text-align:center; padding: 1.5rem; color:var(--md-sys-color-on-surface-muted);"><span class="material-symbols-outlined" style="animation: spin 1s linear infinite; vertical-align: middle;">sync</span> Checking installed packages...</div>';
+            
+            try {
+                const response = await fetch('/installed-languages');
+                const data = await response.json();
+                currentInstalledPackages = data.packages || [];
+                renderInstalledPackageList();
+            } catch (e) {
+                pkgListEl.innerHTML = '<div style="text-align:center; padding: 1rem; color:var(--md-sys-color-error);">Failed to load installed packages.</div>';
+            }
+        }
+
+        function renderInstalledPackageList() {
+            const pkgListEl = document.getElementById('installedPkgList');
+            if (!pkgListEl) return;
+            pkgListEl.innerHTML = '';
+
+            if (currentInstalledPackages.length === 0) {
+                pkgListEl.innerHTML = '<div style="text-align:center; padding: 1.5rem; color:var(--md-sys-color-on-surface-muted);">No language packages currently installed.</div>';
+                return;
+            }
+
+            currentInstalledPackages.forEach(pkg => {
+                const item = document.createElement('div');
+                item.className = 'installed-pkg-item';
+
+                const label = document.createElement('label');
+                label.className = 'installed-pkg-label';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = pkg.from_code;
+                checkbox.className = 'pkg-checkbox';
+                if (pkg.is_default) {
+                    checkbox.dataset.isDefault = 'true';
+                }
+
+                const langMatch = supportedLanguages.find(l => l.code === pkg.from_code);
+                const langName = langMatch ? langMatch.name : (pkg.from_name || pkg.from_code);
+
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(`${langName} (${pkg.from_code} ➔ ${pkg.to_code})`));
+
+                const meta = document.createElement('div');
+                meta.className = 'installed-pkg-meta';
+
+                if (pkg.is_default) {
+                    const defaultBadge = document.createElement('span');
+                    defaultBadge.className = 'pkg-badge-default';
+                    defaultBadge.textContent = 'Default';
+                    meta.appendChild(defaultBadge);
+                }
+
+                const sizeBadge = document.createElement('span');
+                sizeBadge.className = 'pkg-badge-size';
+                sizeBadge.textContent = '~100 MB';
+                meta.appendChild(sizeBadge);
+
+                item.appendChild(label);
+                item.appendChild(meta);
+                pkgListEl.appendChild(item);
+            });
+        }
+
+        function selectAllNonDefaultPacks() {
+            const checkboxes = document.querySelectorAll('.pkg-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = (cb.dataset.isDefault !== 'true');
+            });
+        }
+
+        function deselectAllPacks() {
+            const checkboxes = document.querySelectorAll('.pkg-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+
+        async function runUninstallSelectedPacks() {
+            const checked = Array.from(document.querySelectorAll('.pkg-checkbox:checked')).map(cb => cb.value);
+            const banner = document.getElementById('modalStatusBanner');
+            const uninstallBtn = document.getElementById('uninstallPacksBtn');
+
+            if (checked.length === 0) {
+                if (banner) {
+                    banner.className = 'modal-status-banner error';
+                    banner.innerHTML = '<span class="material-symbols-outlined">info</span> Please select at least one language package to uninstall.';
+                    banner.style.display = 'flex';
+                }
+                return;
+            }
+
+            if (uninstallBtn) {
+                uninstallBtn.disabled = true;
+                uninstallBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Uninstalling...';
+            }
+
+            try {
+                const response = await fetch('/uninstall-languages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codes: checked })
+                });
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    if (banner) {
+                        banner.className = 'modal-status-banner success';
+                        const freedSpace = checked.length * 100;
+                        banner.innerHTML = `<span class="material-symbols-outlined">check_circle</span> ${result.message} (Freed ~${freedSpace} MB disk space)`;
+                        banner.style.display = 'flex';
+                    }
+                    await fetchInstalledPackages();
+                } else {
+                    if (banner) {
+                        banner.className = 'modal-status-banner error';
+                        banner.innerHTML = `<span class="material-symbols-outlined">error</span> ${result.error || 'Failed to uninstall package(s).'}`;
+                        banner.style.display = 'flex';
+                    }
+                }
+            } catch (err) {
+                if (banner) {
+                    banner.className = 'modal-status-banner error';
+                    banner.innerHTML = '<span class="material-symbols-outlined">error</span> Network error while uninstalling package(s).';
+                    banner.style.display = 'flex';
+                }
+            } finally {
+                if (uninstallBtn) {
+                    uninstallBtn.disabled = false;
+                    uninstallBtn.innerHTML = '<span class="material-symbols-outlined">delete_sweep</span> Uninstall Selected';
+                }
+            }
+        }
     </script>
+
+    <!-- Language Manager & Storage Cleanup Modal -->
+    <div id="languageManagerModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary); font-size:24px;">cleaning_services</span>
+                    Manage Language Storage
+                </div>
+                <button class="modal-close-btn" onclick="closeLanguageManagerModal()" title="Close dialog">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body-desc">
+                The following translation packages are currently installed on your device. Each pack uses ~90–150 MB of local disk space. Select packages you no longer need and uninstall them to free up disk space. Uninstalled packs will automatically re-download if selected again later.
+            </div>
+            <div class="installed-pkg-list" id="installedPkgList">
+                <div style="text-align:center; padding: 1.5rem; color:var(--md-sys-color-on-surface-muted);">
+                    <span class="material-symbols-outlined" style="animation: spin 1s linear infinite; vertical-align: middle;">sync</span> Checking installed packages...
+                </div>
+            </div>
+            <div class="quick-select-bar">
+                <span class="quick-select-link" onclick="selectAllNonDefaultPacks()">Select All Non-Default</span>
+                <span class="quick-select-link" onclick="deselectAllPacks()">Deselect All</span>
+            </div>
+            <div id="modalStatusBanner" class="modal-status-banner" style="display: none;"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeLanguageManagerModal()">Cancel</button>
+                <button class="btn btn-danger" id="uninstallPacksBtn" onclick="runUninstallSelectedPacks()">
+                    <span class="material-symbols-outlined">delete_sweep</span> Uninstall Selected
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
