@@ -805,6 +805,45 @@ textarea::-webkit-scrollbar-thumb:hover {
     gap: 6px;
 }
 
+/* Material Language Pack Prompt Banner */
+.lang-prompt-banner {
+    background: var(--md-sys-color-warning-container);
+    color: var(--md-sys-color-on-warning-container);
+    border: 1px solid rgba(178, 89, 0, 0.3);
+    border-radius: var(--md-corner-l);
+    padding: 0.85rem 1.25rem;
+    margin-top: 0.85rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: var(--md-elevation-1);
+    animation: modalFadeIn 0.25s ease-out;
+}
+
+.lang-prompt-banner.success-state {
+    background: var(--md-sys-color-success-container);
+    color: var(--md-sys-color-on-success-container);
+    border-color: rgba(20, 108, 46, 0.3);
+}
+
+.lang-prompt-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.4;
+}
+
+.lang-prompt-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 /* Material Warning Alert Card */
 .warning-alert {
     background: var(--md-sys-color-error-container);
@@ -1073,6 +1112,24 @@ textarea::-webkit-scrollbar-thumb:hover {
 .pkg-badge-default {
     background: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-on-primary-container);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--md-corner-full);
+}
+
+.pkg-badge-installed {
+    background: var(--md-sys-color-success-container);
+    color: var(--md-sys-color-on-success-container);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--md-corner-full);
+}
+
+.pkg-badge-uninstalled {
+    background: var(--md-sys-color-warning-container);
+    color: var(--md-sys-color-on-warning-container);
     font-size: 0.72rem;
     font-weight: 700;
     padding: 2px 8px;
