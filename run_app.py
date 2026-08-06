@@ -1,6 +1,7 @@
 """
 Cross-Platform Launcher for WörtWeaver
-Automatically detects OS and uses Waitress WSGI server on Windows / production, or Flask dev server.
+Automatically detects OS and uses Waitress WSGI server on Windows
+or production, or Flask dev server.
 """
 
 import logging

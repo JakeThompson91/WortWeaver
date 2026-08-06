@@ -68,7 +68,7 @@ def ensure_language_package(from_code: str, to_code: str = "en") -> bool:
 
         if from_code not in installed_codes or to_code not in installed_codes:
             logging.info(
-                f"Downloading translation package for {from_code} -> {to_code}..."
+                f"Downloading translation package for " f"{from_code} -> {to_code}..."
             )
             argostranslate.package.update_package_index()
             available_packages = argostranslate.package.get_available_packages()
@@ -84,7 +84,7 @@ def ensure_language_package(from_code: str, to_code: str = "en") -> bool:
                 download_path = pkg.download()
                 argostranslate.package.install_from_path(download_path)
                 logging.info(
-                    f"Successfully installed package for {from_code} -> {to_code}"
+                    f"Successfully installed package for " f"{from_code} -> {to_code}"
                 )
                 return True
             else:
@@ -112,7 +112,7 @@ def get_translation_model(from_code: str = "de", to_code: str = "en"):
             _TRANSLATION_MODELS[key] = model
         except Exception as e:
             logging.error(
-                f"Failed to get translation model for {from_code}->{to_code}: {e}"
+                f"Failed to get translation model for " f"{from_code}->{to_code}: {e}"
             )
             _TRANSLATION_MODELS[key] = None
     return _TRANSLATION_MODELS.get(key)
@@ -154,8 +154,8 @@ def setup_translation_model():
 
 def split_into_paragraphs(text):
     """
-    Splits raw text into distinct paragraphs based on line breaks, PDF page output,
-    and punctuation boundaries.
+    Splits raw text into distinct paragraphs based on line breaks,
+    PDF page output, and punctuation boundaries.
     """
     if not text:
         return []
@@ -163,7 +163,8 @@ def split_into_paragraphs(text):
     # Normalize carriage returns and line endings
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
 
-    # Convert single newlines following sentence terminators into double newlines
+    # Convert single newlines following sentence terminators into double
+    # newlines
     normalized = PARAGRAPH_BOUNDARY_RE.sub("\n\n", normalized)
 
     # Split on double or multiple newlines
@@ -173,7 +174,7 @@ def split_into_paragraphs(text):
 
     clean_paragraphs = []
     for p in raw_paragraphs:
-        # Replace soft single line breaks inside a paragraph with a single space
+        # Replace soft single line breaks inside a paragraph with a space
         single_line = SOFT_BREAK_RE.sub(" ", p)
         single_line = WHITESPACE_RE.sub(" ", single_line).strip()
         if single_line:
@@ -195,7 +196,8 @@ def split_into_paragraphs(text):
 def split_paragraph_into_sentences(text):
     """
     Regex sentence boundary detection.
-    Splits on sentence-ending punctuation (.!? or quote marks) followed by space/newline.
+    Splits on sentence-ending punctuation (.!? or quote marks) followed by
+    space/newline.
     """
     raw_sentences = SENTENCE_END_RE.split(text)
     sentences = [s.strip() for s in raw_sentences if s.strip()]
@@ -215,7 +217,10 @@ def get_languages():
 
 @app.route("/installed-languages", methods=["GET"])
 def get_installed_languages():
-    """Returns a list of currently installed ArgosTranslate language packages and installed language codes."""
+    """
+    Returns a list of currently installed ArgosTranslate language packages
+    and installed language codes.
+    """
     try:
         installed_pkgs = argostranslate.package.get_installed_packages()
         pkg_list = []
@@ -234,7 +239,10 @@ def get_installed_languages():
         return jsonify({"packages": pkg_list, "installed_codes": list(installed_codes)})
     except Exception as e:
         logging.error(f"Error fetching installed language packages: {e}")
-        return jsonify({"packages": [], "installed_codes": [], "error": str(e)}), 500
+        return (
+            jsonify({"packages": [], "installed_codes": [], "error": str(e)}),
+            500,
+        )
 
 
 @app.route("/install-language", methods=["POST"])
@@ -244,10 +252,14 @@ def install_language():
     from_code = data.get("from_code")
 
     if not from_code:
-        return jsonify({"success": False, "error": "No language code provided."}), 400
+        return (
+            jsonify({"success": False, "error": "No language code provided."}),
+            400,
+        )
 
     lang_match = next(
-        (lang for lang in SUPPORTED_LANGUAGES if lang["code"] == from_code), None
+        (lang for lang in SUPPORTED_LANGUAGES if lang["code"] == from_code),
+        None,
     )
     lang_name = lang_match["name"] if lang_match else from_code
 
@@ -262,21 +274,24 @@ def install_language():
             installed_pkgs = argostranslate.package.get_installed_packages()
             installed_codes = list(set([p.from_code for p in installed_pkgs]))
 
+            msg = (
+                f"Successfully installed language pack for {lang_name} "
+                f"({from_code} → {TO_CODE})."
+            )
             return jsonify(
                 {
                     "success": True,
-                    "message": f"Successfully installed language pack for {lang_name} ({from_code} → {TO_CODE}).",
+                    "message": msg,
                     "installed_codes": installed_codes,
                 }
             )
         else:
+            err_msg = (
+                f"Language package for {lang_name} ({from_code}) "
+                "could not be found or downloaded."
+            )
             return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": f"Language package for {lang_name} ({from_code}) could not be found or downloaded.",
-                    }
-                ),
+                jsonify({"success": False, "error": err_msg}),
                 400,
             )
     except Exception as e:
@@ -286,7 +301,10 @@ def install_language():
 
 @app.route("/uninstall-languages", methods=["POST"])
 def uninstall_languages():
-    """Uninstalls specified ArgosTranslate language packages to free up local disk space."""
+    """
+    Uninstalls specified ArgosTranslate language packages
+    to free up local disk space.
+    """
     data = request.get_json() or {}
     codes_to_remove = data.get("codes", [])
 
@@ -313,12 +331,13 @@ def uninstall_languages():
         remaining_codes = list(set([p.from_code for p in remaining_pkgs]))
 
         logging.info(f"Successfully uninstalled language packs: {uninstalled}")
+        msg = f"Successfully uninstalled {len(uninstalled)} language pack(s)."
         return jsonify(
             {
                 "success": True,
                 "uninstalled": uninstalled,
                 "installed_codes": remaining_codes,
-                "message": f"Successfully uninstalled {len(uninstalled)} language pack(s).",
+                "message": msg,
             }
         )
     except Exception as e:
@@ -328,7 +347,10 @@ def uninstall_languages():
 
 @app.route("/spotcheck-process", methods=["POST"])
 def spotcheck_process():
-    """Processes input text into paragraph chunks and sentence pairs with parallel multi-threaded translation."""
+    """
+    Processes input text into paragraph chunks and sentence pairs
+    with parallel multi-threaded translation.
+    """
     data = request.get_json() or {}
     source_text = data.get("text", "")
     from_code = data.get("from_code", DEFAULT_FROM_CODE)
@@ -398,7 +420,10 @@ def spotcheck_process():
 
 @app.route("/translate-word", methods=["POST"])
 def translate_word():
-    """Translates an individual word or phrase on-demand for hover tooltips using LRU cache."""
+    """
+    Translates an individual word or phrase on-demand for hover tooltips
+    using LRU cache.
+    """
     data = request.get_json() or {}
     raw_word = data.get("word", "").strip()
     from_code = data.get("from_code", DEFAULT_FROM_CODE)
@@ -438,7 +463,10 @@ def upload_file():
                     continue
             extracted_text = "\n\n".join(page_texts)
         else:
-            return jsonify({"error": "Please upload a .txt or .pdf file."}), 400
+            return (
+                jsonify({"error": "Please upload a .txt or .pdf file."}),
+                400,
+            )
 
         return jsonify({"original_text": extracted_text})
 
