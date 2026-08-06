@@ -3,6 +3,7 @@ import io
 import os
 import logging
 import functools
+from typing import Dict, Tuple, Any
 from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, render_template, request, jsonify
 import argostranslate.package
@@ -52,7 +53,7 @@ SENTENCE_END_RE = re.compile(r'(?<=[.!?»”"])\s+')
 CLEAN_WORD_RE = re.compile(r'^[^\w\s]+|[^\w\s]+$', re.UNICODE)
 
 # Global cached translation model handles: (from_code, to_code) -> model
-_TRANSLATION_MODELS = {}
+_TRANSLATION_MODELS: Dict[Tuple[str, str], Any] = {}
 
 def ensure_language_package(from_code: str, to_code: str = "en") -> bool:
     """Installs the requested ArgosTranslate language package if it is not installed yet."""

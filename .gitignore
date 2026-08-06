@@ -25,3 +25,4 @@ htmlcov/
 # Logs & Temp files
 *.log
 spotchecked_translation.txt
+node_modules/
