@@ -91,9 +91,7 @@ def test_upload_file_txt(client):
             "sample.txt",
         )
     }
-    response = client.post(
-        "/upload", data=data, content_type="multipart/form-data"
-    )
+    response = client.post("/upload", data=data, content_type="multipart/form-data")
     assert response.status_code == 200
     json_data = response.get_json()
     assert "original_text" in json_data
@@ -109,9 +107,7 @@ def test_upload_file_missing(client):
 
 def test_upload_file_invalid_extension(client):
     data = {"file": (io.BytesIO(b"binary data"), "image.png")}
-    response = client.post(
-        "/upload", data=data, content_type="multipart/form-data"
-    )
+    response = client.post("/upload", data=data, content_type="multipart/form-data")
     assert response.status_code == 400
     json_data = response.get_json()
     assert "error" in json_data
