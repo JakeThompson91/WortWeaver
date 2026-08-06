@@ -30,7 +30,6 @@ Please delete options that are not relevant and check the box that applies:
 Please describe the tests that you ran to verify your changes. Include
 instructions so we can reproduce.
 
-- [ ] **Unit Tests:** Added/updated and passing
 - [ ] **Integration/Manual Testing:** Verified locally on dev environment
 - **Test Details/Steps:**
   1.
@@ -40,13 +39,10 @@ instructions so we can reproduce.
 
 ## Checklist
 
-- [ ] My code follows the style guidelines of this project.
 - [ ] I have performed a self-review of my code.
 - [ ] I have commented my code, particularly in hard-to-understand areas.
 - [ ] I have made corresponding changes to the documentation.
 - [ ] My changes generate no new warnings or errors.
-- [ ] I have added tests that prove my fix is effective or that my feature works.
-- [ ] New and existing unit tests pass locally with my changes.
 
 ---
 

@@ -37,6 +37,11 @@
             <div class="upload-text">
                 <strong>Click to upload a document (.txt, .pdf)</strong> or paste text below
             </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+                <button class="btn btn-outline" style="padding: 4px 14px; font-size: 0.82rem; min-height: 32px;" onclick="openLocalFileDirectly(); event.stopPropagation();" title="Open local file with direct save/overwrite support">
+                    <span class="material-symbols-outlined" style="font-size:18px;">folder_open</span> Open File Directly
+                </button>
+            </div>
             <input type="file" id="fileInput" accept=".txt,.pdf" onchange="handleFileUpload(this.files[0])">
         </div>
 
@@ -173,6 +178,10 @@
                 <div class="stepper-info">
                     Chunk <span id="currentChunkNum">1</span> of <span id="totalChunksNum">1</span>
                     <span id="approvalBadge" class="badge">Unreviewed</span>
+                    <span id="activeFileChip" class="active-file-chip" style="display:none;" title="Active Document File">
+                        <span class="material-symbols-outlined" style="font-size:16px;">description</span>
+                        <span id="activeFileNameText">document.txt</span>
+                    </span>
                 </div>
                 <div class="stepper-btn-group">
                     <button class="btn btn-success" onclick="toggleApproveChunk()" id="approveBtn">
@@ -184,8 +193,11 @@
                     <button class="btn btn-teal" onclick="approveAllChunks()" id="approveAllBtn" title="Approve all document chunks at once">
                         <span class="material-symbols-outlined">done_all</span> Approve All Chunks
                     </button>
-                    <button class="btn" onclick="exportFullDocument()" id="downloadBtn">
-                        <span class="material-symbols-outlined">download</span> Download Full File
+                    <button class="btn btn-save" onclick="saveToExistingFile()" id="saveExistingBtn" title="Save translated text onto existing file (Ctrl+S / Cmd+S)">
+                        <span class="material-symbols-outlined">save</span> Save to Existing File
+                    </button>
+                    <button class="btn btn-outline" onclick="exportFullDocument()" id="downloadBtn" title="Download or Save As a new file copy">
+                        <span class="material-symbols-outlined">download</span> Save As / Download
                     </button>
                 </div>
                 <div class="stepper-btn-group stepper-btn-group-right">
@@ -204,6 +216,9 @@
         let flagState = {};
         let isSentenceModeEnabled = true; // Defaults to ON
         let isWordModeEnabled = false;
+
+        let loadedFileName = '';
+        let loadedFileHandle = null;
 
         let selectedFromCode = 'de';
         let selectedFromName = 'German';
@@ -370,8 +385,16 @@
             }
         }
 
-        // Keyboard Shortcuts for Mode Switching ('s' / 'S' for sentence mode, 'w' / 'W' for word mode, 't' / 'T' for hover translation)
+        // Keyboard Shortcuts for Mode Switch & Save ('s' for sentence mode, 'w' for word mode, 't' for hover translation, Ctrl+S / Cmd+S for saving)
         document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                if (chunksData && chunksData.length > 0) {
+                    saveToExistingFile();
+                }
+                return;
+            }
+
             const active = document.activeElement;
             const isEditable = active && (
                 active.tagName === 'INPUT' ||
@@ -400,8 +423,37 @@
         }
 
         // 1. Process Uploaded File
-        async function handleFileUpload(file) {
+        async function openLocalFileDirectly() {
+            if ('showOpenFilePicker' in window) {
+                try {
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{
+                            description: 'Supported Documents (*.txt, *.pdf)',
+                            accept: {
+                                'text/plain': ['.txt'],
+                                'application/pdf': ['.pdf']
+                            }
+                        }],
+                        multiple: false
+                    });
+                    const file = await handle.getFile();
+                    await handleFileUpload(file, handle);
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Error opening file:', err);
+                    }
+                }
+            } else {
+                document.getElementById('fileInput').click();
+            }
+        }
+
+        async function handleFileUpload(file, fileHandle = null) {
             if (!file) return;
+            loadedFileName = file.name;
+            loadedFileHandle = fileHandle || null;
+            updateActiveFileUI();
+
             const formData = new FormData();
             formData.append('file', file);
 
@@ -410,6 +462,7 @@
                 const result = await response.json();
                 if (response.ok) {
                     document.getElementById('rawSourceText').value = result.original_text;
+                    showToast(`Loaded "${loadedFileName}"`);
                 } else {
                     alert(result.error || 'Failed to parse file.');
                 }
@@ -417,6 +470,19 @@
                 alert('Error uploading file.');
             } finally {
                 document.getElementById('fileInput').value = '';
+            }
+        }
+
+        function updateActiveFileUI() {
+            const chip = document.getElementById('activeFileChip');
+            const textEl = document.getElementById('activeFileNameText');
+            if (chip && textEl) {
+                if (loadedFileName) {
+                    textEl.textContent = loadedFileName;
+                    chip.style.display = 'inline-flex';
+                } else {
+                    chip.style.display = 'none';
+                }
             }
         }
 
@@ -472,6 +538,7 @@
                     document.getElementById('rawInputGrid').style.display = 'none';
                     document.getElementById('uploadSection').style.display = 'none';
                     document.getElementById('spotCheckWorkspace').style.display = 'block';
+                    updateActiveFileUI();
                     renderCurrentChunk();
                 }
             } catch (err) {
@@ -497,6 +564,9 @@
             approvalState = {};
             flagState = {};
             currentChunkIndex = 0;
+            loadedFileName = '';
+            loadedFileHandle = null;
+            updateActiveFileUI();
 
             document.getElementById('uploadSection').style.display = 'flex';
             document.getElementById('rawInputGrid').style.display = 'block';
@@ -850,6 +920,140 @@
             }
             hideWarningAlert();
             renderCurrentChunk();
+        }
+
+        async function saveToExistingFile() {
+            if (!chunksData || chunksData.length === 0) return;
+
+            // 1. Block save unless ALL chunks have been approved
+            const unapprovedChunks = [];
+            for (let i = 0; i < chunksData.length; i++) {
+                if (!approvalState[i]) {
+                    const statusStr = flagState[i] ? `Chunk ${i + 1} (Flagged)` : `Chunk ${i + 1}`;
+                    unapprovedChunks.push(statusStr);
+                }
+            }
+
+            const alertBox = document.getElementById('warningAlertBox');
+
+            if (unapprovedChunks.length > 0) {
+                const chunkListStr = unapprovedChunks.join(', ');
+                alertBox.innerHTML = `
+                    <span style="display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="font-size:22px;">warning</span>
+                        <span><strong>Save Blocked:</strong> All chunks must be approved before saving onto existing file. Unreviewed: <strong>${chunkListStr}</strong></span>
+                    </span>
+                    <button onclick="hideWarningAlert()" style="background:none; border:none; color:inherit; font-weight:bold; cursor:pointer; font-size:1.2rem; line-height:1; padding:0 4px; display:flex; align-items:center;" title="Dismiss alert">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                `;
+                alertBox.style.display = 'flex';
+                
+                alertBox.style.animation = 'none';
+                alertBox.offsetHeight;
+                alertBox.style.animation = 'flashRed 0.5s ease-in-out 2';
+                return;
+            }
+
+            hideWarningAlert();
+
+            const now = new Date();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const yyyy = now.getFullYear();
+            const fallbackFilename = `spotchecked_translation_${mm}_${dd}_${yyyy}.txt`;
+            let targetFilename = loadedFileName || fallbackFilename;
+            if (targetFilename.toLowerCase().endsWith('.pdf')) {
+                targetFilename = targetFilename.replace(/\.pdf$/i, '_translated.txt');
+            }
+
+            // Compile full document translation
+            let compiled = '';
+            chunksData.forEach(chunk => {
+                chunk.paragraphs.forEach(para => {
+                    compiled += para.map(s => s.translated).join(' ') + '\n\n';
+                });
+            });
+            const textContent = compiled.trim();
+
+            // Direct write using existing file handle if available
+            if (loadedFileHandle) {
+                try {
+                    if (loadedFileHandle.queryPermission) {
+                        const options = { mode: 'readwrite' };
+                        let perm = await loadedFileHandle.queryPermission(options);
+                        if (perm !== 'granted') {
+                            perm = await loadedFileHandle.requestPermission(options);
+                        }
+                        if (perm !== 'granted') {
+                            throw new Error('Permission to write to file was denied.');
+                        }
+                    }
+                    const writable = await loadedFileHandle.createWritable();
+                    await writable.write(textContent);
+                    await writable.close();
+                    showToast(`Saved changes directly onto "${loadedFileHandle.name || targetFilename}"!`);
+                    return;
+                } catch (err) {
+                    console.warn('Direct file write using stored handle failed, opening file picker fallback:', err);
+                }
+            }
+
+            // File System Access API Save Picker to select or overwrite existing file
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: targetFilename,
+                        types: [{
+                            description: 'Text Document (*.txt)',
+                            accept: { 'text/plain': ['.txt'] }
+                        }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(textContent);
+                    await writable.close();
+
+                    loadedFileHandle = handle;
+                    loadedFileName = handle.name;
+                    updateActiveFileUI();
+
+                    showToast(`Saved changes onto "${loadedFileName}"!`);
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        return;
+                    }
+                }
+            }
+
+            // Legacy browser fallback
+            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = targetFilename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast(`Saved file as "${targetFilename}"`);
+        }
+
+        function showToast(message, duration = 3500) {
+            let toast = document.getElementById('toastNotification');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toastNotification';
+                toast.className = 'toast-notification';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `
+                <span class="material-symbols-outlined" style="font-size:20px; color:#146c2e;">check_circle</span>
+                <span>${message}</span>
+            `;
+            toast.classList.add('show');
+
+            if (toast._timer) clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
         }
 
         async function exportFullDocument() {

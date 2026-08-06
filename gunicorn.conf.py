@@ -7,20 +7,22 @@ bind = "0.0.0.0:5000"
 backlog = 2048
 
 # Worker Processes & Concurrency
-# Uses gthread worker class with 2 threads per process for concurrent translation handling
+# Uses gthread worker class with 2 threads per process for
+# concurrent translation handling
 workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
 worker_class = "gthread"
 threads = 2
 
 # Worker Timeout
-# Set to 120 seconds to accommodate large document translation tasks without process termination
+# Set to 120 seconds to accommodate large document translation tasks
+# without process termination
 timeout = 120
 keepalive = 5
 
 # Logging
 loglevel = "warning"
 accesslog = None  # Suppress HTTP access logging
-errorlog = "-"    # Log only critical errors
+errorlog = "-"  # Log only critical errors
 
 # Process Name
 proc_name = "wortweaver_gunicorn"
