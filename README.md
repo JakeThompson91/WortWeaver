@@ -99,6 +99,38 @@ Open your browser and navigate to **`http://127.0.0.1:5000`**.
 
 ---
 
+## 🐳 Docker Setup
+
+### Option 1: Docker Compose (Recommended)
+```bash
+# Build image and start WörtWeaver container in detached mode
+docker compose up -d
+
+# View server logs
+docker compose logs -f
+
+# Stop container
+docker compose down
+```
+
+### Option 2: Docker CLI
+```bash
+# Build Docker image
+docker build -t wortweaver:latest .
+
+# Run container with persistent translation volume
+docker run -d \
+  --name wortweaver \
+  -p 5000:5000 \
+  -v wortweaver_argos_data:/home/appuser/.local/share/argos-translate \
+  --restart unless-stopped \
+  wortweaver:latest
+```
+
+Open your browser and navigate to **`http://localhost:5000`**.
+
+---
+
 ## 🛠️ Project Structure
 
 ```
@@ -109,6 +141,9 @@ local-translation-app/
 ├── run_windows.ps1         # Windows PowerShell launcher
 ├── wsgi.py                 # Production WSGI application entrypoint
 ├── gunicorn.conf.py        # Production Gunicorn server configuration (Linux/macOS)
+├── Dockerfile              # Production Docker container definition
+├── docker-compose.yml      # Docker Compose service & volume config
+├── .dockerignore           # Docker build exclusion patterns
 ├── static/
 │   └── style.css           # Modular stylesheet and design system
 ├── templates/
