@@ -9,6 +9,7 @@
     --md-sys-color-primary-hover: #0842a0;
     --md-sys-color-primary-container: #d3e3fd;
     --md-sys-color-on-primary-container: #041e49;
+    --md-sys-color-on-primary: #ffffff;
     --md-sys-color-surface: #fff;
     --md-sys-color-surface-dim: #f1f3f4;
     --md-sys-color-surface-container: #f8f9fa;
@@ -56,6 +57,47 @@
     --md-motion-accelerate: cubic-bezier(0.4, 0.0, 1, 1.0);
 }
 
+[data-theme="dark"] {
+    /* Google Material Design 3 Dark Color Tokens */
+    --md-sys-color-primary: #a8c7fa;
+    --md-sys-color-primary-hover: #c3d7fa;
+    --md-sys-color-primary-container: #0842a0;
+    --md-sys-color-on-primary-container: #d3e3fd;
+    --md-sys-color-on-primary: #041e49;
+    --md-sys-color-surface: #1e1f22;
+    --md-sys-color-surface-dim: #131416;
+    --md-sys-color-surface-container: #282a2e;
+    --md-sys-color-surface-container-high: #1c1d21;
+    --md-sys-color-surface-variant: #3a3d42;
+    --md-sys-color-outline: #5e6368;
+    --md-sys-color-outline-variant: #36383e;
+    --md-sys-color-on-surface: #e3e2e6;
+    --md-sys-color-on-surface-variant: #c4c7c5;
+    --md-sys-color-on-surface-muted: #9aa0a6;
+    --md-sys-color-success: #6ddb8c;
+    --md-sys-color-success-container: #0e3e1e;
+    --md-sys-color-on-success-container: #c6edd5;
+    --md-sys-color-success-hover: #85e8a3;
+    --md-sys-color-warning: #ffb95e;
+    --md-sys-color-warning-container: #4a2800;
+    --md-sys-color-on-warning-container: #fef0d5;
+    --md-sys-color-warning-hover: #ffca85;
+    --md-sys-color-error: #f2b8b5;
+    --md-sys-color-error-container: #601410;
+    --md-sys-color-on-error-container: #f9dedc;
+    --md-sys-color-error-hover: #f7d0ce;
+    --md-sys-color-teal: #4cd6d6;
+    --md-sys-color-teal-container: #003737;
+    --md-sys-color-on-teal-container: #cce8e8;
+    --md-sys-color-teal-hover: #77e5e5;
+
+    /* Elevation & Shadows for Dark Theme */
+    --md-elevation-1: 0 1px 3px 0 rgb(0 0 0 / 50%), 0 1px 2px 0 rgb(0 0 0 / 35%);
+    --md-elevation-2: 0 2px 6px 0 rgb(0 0 0 / 55%), 0 1px 3px 0 rgb(0 0 0 / 40%);
+    --md-elevation-3: 0 4px 12px 0 rgb(0 0 0 / 60%), 0 2px 4px 0 rgb(0 0 0 / 45%);
+    --md-elevation-4: 0 8px 24px 0 rgb(0 0 0 / 70%), 0 4px 8px 0 rgb(0 0 0 / 55%);
+}
+
 * {
     box-sizing: border-box;
     font-family: 'Google Sans', Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -72,6 +114,14 @@ body {
     padding: 2rem 1.5rem 4rem;
     color: var(--md-sys-color-on-surface);
     line-height: 1.5;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] body {
+    background-color: #121316;
+    background-image: 
+        radial-gradient(at 0% 0%, rgb(8 66 160 / 25%) 0, transparent 50%),
+        radial-gradient(at 100% 100%, rgb(14 62 30 / 20%) 0, transparent 50%);
 }
 
 .container {
@@ -167,6 +217,44 @@ header h1 {
     -webkit-text-fill-color: transparent;
 }
 
+[data-theme="dark"] .brand-name {
+    background: linear-gradient(135deg, #a8c7fa 0%, #669df6 100%);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.theme-toggle-btn {
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface-dim);
+    color: var(--md-sys-color-on-surface);
+    padding: 5px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: var(--md-corner-full);
+    cursor: pointer;
+    transition: all 0.2s var(--md-motion-standard);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1.2;
+    white-space: nowrap;
+    min-height: 32px;
+    margin-left: auto;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    border-color: var(--md-sys-color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--md-elevation-1);
+}
+
+.theme-toggle-btn:active {
+    transform: translateY(0);
+}
+
 .lang-chip {
     font-size: 0.82rem;
     font-weight: 600;
@@ -174,7 +262,7 @@ header h1 {
     color: var(--md-sys-color-on-primary-container);
     padding: 4px 12px;
     border-radius: var(--md-corner-full);
-    border: 1px solid rgb(11 87 208 / 15%);
+    border: 1px solid var(--md-sys-color-outline-variant);
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -189,7 +277,7 @@ header h1 {
     border-radius: var(--md-corner-full);
     letter-spacing: 0.6px;
     text-transform: uppercase;
-    border: 1px solid rgb(178 89 0 / 20%);
+    border: 1px solid var(--md-sys-color-outline-variant);
     flex-shrink: 0;
 }
 
@@ -205,7 +293,7 @@ header p {
 /* Material Dropzone / Upload Card */
 .upload-section {
     background: var(--md-sys-color-surface);
-    border: 2px dashed #a0c2f9;
+    border: 2px dashed var(--md-sys-color-outline);
     border-radius: var(--md-corner-xl);
     padding: 1.5rem;
     text-align: center;
@@ -232,7 +320,7 @@ header p {
     width: 48px;
     height: 48px;
     border-radius: var(--md-corner-full);
-    background: #e8f0fe;
+    background: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-primary);
     display: flex;
     align-items: center;
@@ -242,7 +330,7 @@ header p {
 
 .upload-section:hover .upload-icon {
     transform: scale(1.1);
-    background: #fff;
+    background: var(--md-sys-color-surface);
 }
 
 .upload-icon .material-symbols-outlined {
@@ -455,7 +543,7 @@ textarea::-webkit-scrollbar-thumb:hover {
 }
 
 .mode-toggle-btn:hover {
-    background: rgb(0 0 0 / 5%);
+    background: var(--md-sys-color-surface-variant);
 }
 
 .mode-kbd {
@@ -466,7 +554,7 @@ textarea::-webkit-scrollbar-thumb:hover {
     border-radius: var(--md-corner-xs);
     line-height: 1;
     display: inline-block;
-    background: rgb(0 0 0 / 8%);
+    background: var(--md-sys-color-surface-variant);
     color: var(--md-sys-color-on-surface);
 }
 
@@ -496,15 +584,15 @@ textarea::-webkit-scrollbar-thumb:hover {
 }
 
 .btn-mode-translate.active {
-    background: #e8def8;
-    color: #1d192b;
+    background: var(--md-sys-color-teal-container);
+    color: var(--md-sys-color-on-teal-container);
     font-weight: 600;
-    box-shadow: 0 1px 3px rgb(103 80 164 / 20%);
+    box-shadow: 0 1px 3px rgb(0 106 106 / 20%);
 }
 
 .btn-mode-translate.active .mode-kbd {
-    background: rgb(103 80 164 / 18%);
-    color: #1d192b;
+    background: rgb(0 106 106 / 18%);
+    color: var(--md-sys-color-on-teal-container);
 }
 
 .toggle-status-badge {
@@ -517,13 +605,13 @@ textarea::-webkit-scrollbar-thumb:hover {
 }
 
 .toggle-status-badge.status-off {
-    background: rgb(0 0 0 / 8%);
+    background: var(--md-sys-color-surface-variant);
     color: var(--md-sys-color-on-surface-muted);
 }
 
 .toggle-status-badge.status-on,
 .toggle-status-badge.status-translate-on {
-    background: #6750a4;
+    background: var(--md-sys-color-teal);
     color: #fff;
 }
 
@@ -541,8 +629,8 @@ textarea::-webkit-scrollbar-thumb:hover {
 .gt-tooltip {
     position: absolute;
     z-index: 1000;
-    background: #202124;
-    color: #fff;
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
     padding: 8px 14px;
     border-radius: var(--md-corner-m);
     font-size: 0.88rem;
@@ -552,14 +640,14 @@ textarea::-webkit-scrollbar-thumb:hover {
     align-items: center;
     gap: 10px;
     pointer-events: auto;
-    border: 1px solid #3c4043;
+    border: 1px solid var(--md-sys-color-outline);
     transform: translateY(-100%);
     margin-top: -8px;
     transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .gt-tooltip .orig-term {
-    color: #bdc1c6;
+    color: var(--md-sys-color-on-surface-muted);
     font-style: italic;
     max-width: 150px;
     overflow: hidden;
@@ -568,20 +656,20 @@ textarea::-webkit-scrollbar-thumb:hover {
 }
 
 .gt-tooltip .trans-term {
-    color: #8ab4f8;
+    color: var(--md-sys-color-primary);
     font-weight: 600;
     font-size: 0.92rem;
 }
 
 .gt-tooltip a {
-    color: #e8eaed;
+    color: var(--md-sys-color-on-surface);
     text-decoration: none;
     font-weight: 500;
     font-size: 0.78rem;
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: rgb(255 255 255 / 12%);
+    background: var(--md-sys-color-surface-variant);
     padding: 3px 8px;
     border-radius: var(--md-corner-full);
     margin-left: 4px;
@@ -589,8 +677,8 @@ textarea::-webkit-scrollbar-thumb:hover {
 }
 
 .gt-tooltip a:hover {
-    background: #8ab4f8;
-    color: #202124;
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
 }
 
 /* Highlight Hover States */
@@ -624,7 +712,8 @@ textarea::-webkit-scrollbar-thumb:hover {
 
 /* Inline Editable Input */
 .editable-unit { 
-    background: #fff; 
+    background: var(--md-sys-color-surface); 
+    color: var(--md-sys-color-on-surface);
     border: 2px solid var(--md-sys-color-primary); 
     border-radius: var(--md-corner-xs); 
     padding: 2px 6px; 
@@ -632,7 +721,7 @@ textarea::-webkit-scrollbar-thumb:hover {
     outline: none; 
     display: inline-block; 
     margin: 0 2px; 
-    box-shadow: 0 2px 6px rgb(11 87 208 / 20%);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
 }
 
 /* Material Stepper & Action Floating Dock */
@@ -701,7 +790,7 @@ textarea::-webkit-scrollbar-thumb:hover {
 /* Material Button System */
 .btn { 
     background-color: var(--md-sys-color-primary); 
-    color: #fff; 
+    color: var(--md-sys-color-on-primary); 
     border: none; 
     padding: 0.6rem 1.25rem; 
     border-radius: var(--md-corner-full); 
@@ -731,8 +820,8 @@ textarea::-webkit-scrollbar-thumb:hover {
 }
 
 .btn:disabled { 
-    background-color: #e0e2e0; 
-    color: #1f1f1f;
+    background-color: var(--md-sys-color-surface-variant); 
+    color: var(--md-sys-color-on-surface-muted);
     opacity: 0.6;
     cursor: not-allowed; 
     box-shadow: none;
