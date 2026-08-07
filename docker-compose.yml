@@ -1,0 +1,23 @@
+name: wortweaver
+
+services:
+  wortweaver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wortweaver
+    ports:
+      - "5000:5000"
+    volumes:
+      - argos_data:/home/appuser/.local/share/argos-translate
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/')\" || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  argos_data:
+    driver: local
