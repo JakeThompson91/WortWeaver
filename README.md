@@ -131,6 +131,38 @@ Open your browser and navigate to **`http://localhost:5000`**.
 
 ---
 
+### 🔄 Updating Docker After Code Changes
+
+When you pull updates from Git or modify codebase files, rebuild and restart the Docker container:
+
+#### With Docker Compose:
+```bash
+# Rebuild image with updated code and restart in detached mode
+docker compose up -d --build
+
+# (Optional) Force a clean rebuild without build cache:
+docker compose build --no-cache && docker compose up -d
+```
+
+#### With Docker CLI:
+```bash
+# 1. Stop and remove existing container
+docker stop wortweaver && docker rm wortweaver
+
+# 2. Rebuild Docker image with latest code
+docker build -t wortweaver:latest .
+
+# 3. Restart container (persistent translation packages in volume are preserved)
+docker run -d \
+  --name wortweaver \
+  -p 5000:5000 \
+  -v wortweaver_argos_data:/home/appuser/.local/share/argos-translate \
+  --restart unless-stopped \
+  wortweaver:latest
+```
+
+---
+
 ## 🛠️ Project Structure
 
 ```
