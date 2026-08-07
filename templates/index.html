@@ -25,10 +25,9 @@
                     <span class="material-symbols-outlined">swap_horiz</span> <span id="headerLangText">German ➔ English</span>
                 </span>
                 <span class="beta-badge">BETA</span>
-                <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Dark Mode (Press 'D')">
+                <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Dark Mode">
                     <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
                     <span id="themeLabel">Dark Mode</span>
-                    <kbd class="mode-kbd">D</kbd>
                 </button>
             </div>
             <p>Spot-check <span id="headerDescLang">German</span> translations paragraph by paragraph with granular sentence and word controls.</p>
@@ -286,11 +285,11 @@
             if (theme === 'dark') {
                 if (iconEl) iconEl.textContent = 'light_mode';
                 if (labelEl) labelEl.textContent = 'Light Mode';
-                if (btnEl) btnEl.title = "Switch to Light Mode (Press 'D')";
+                if (btnEl) btnEl.title = "Switch to Light Mode";
             } else {
                 if (iconEl) iconEl.textContent = 'dark_mode';
                 if (labelEl) labelEl.textContent = 'Dark Mode';
-                if (btnEl) btnEl.title = "Switch to Dark Mode (Press 'D')";
+                if (btnEl) btnEl.title = "Switch to Dark Mode";
             }
 
             if (showNotification) {
@@ -444,7 +443,7 @@
             }
         }
 
-        // Keyboard Shortcuts for Mode Switch & Save ('s' for sentence mode, 'w' for word mode, 't' for hover translation, 'd' for theme toggle, Ctrl+S / Cmd+S for saving)
+        // Keyboard Shortcuts for Mode Switch & Save ('s' for sentence mode, 'w' for word mode, 't' for hover translation, Ctrl+S / Cmd+S for saving)
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault();
@@ -470,8 +469,6 @@
                 toggleWordMode();
             } else if (key === 't') {
                 toggleHoverTranslation();
-            } else if (key === 'd') {
-                toggleTheme();
             }
         });
 
