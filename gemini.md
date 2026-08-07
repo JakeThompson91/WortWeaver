@@ -40,8 +40,10 @@
 - **Hover Translation & Dictionary** (`T` key):
   - When enabled (`isTranslateHoverEnabled = true`), hovering over any German word in the Original panel fetches or uses cached word translations (`wordTranslationCache`).
   - Displays a floating popover above the word with the translation and a `Google ↗` deep link.
+- **Theme Switcher & Dark Mode** (`D` key):
+  - Allows users to switch between Light Mode and Dark Mode with persisted `localStorage` preference and automatic OS preference (`prefers-color-scheme`) detection.
 - **UI Design System**:
-  - **Page Background**: Modern blue gradient (`linear-gradient(135deg, #e0f2fe 0%, #dbeafe 50%, #eff6ff 100%)`).
+  - **Page Background**: Modern blue gradient (`linear-gradient(135deg, #e0f2fe 0%, #dbeafe 50%, #eff6ff 100%)`) in Light Mode, sleek midnight charcoal gradient (`#121316`) in Dark Mode.
   - **Sentence Mode Button**: Warm Amber theme (`#d97706` active, `#fef3c7` inactive).
   - **Word Mode Button**: Sky Blue theme (`#0284c7` active, `#e0f2fe` inactive).
   - **Translate Hover Button**: Vibrant Purple theme (`#7c3aed` active, `#ede9fe` inactive).
@@ -54,6 +56,7 @@
 - **`S`**: Switch to **Sentence Mode**
 - **`W`**: Switch to **Word Mode**
 - **`T`**: Toggle **Hover Word Translation** ON / OFF
+- **`D`**: Toggle **Dark / Light Theme** ON / OFF
 
 *Note: Shortcuts are automatically bypassed when focused inside editable text areas or input elements.*
 

@@ -25,6 +25,11 @@
                     <span class="material-symbols-outlined">swap_horiz</span> <span id="headerLangText">German ➔ English</span>
                 </span>
                 <span class="beta-badge">BETA</span>
+                <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch to Dark Mode (Press 'D')">
+                    <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+                    <span id="themeLabel">Dark Mode</span>
+                    <kbd class="mode-kbd">D</kbd>
+                </button>
             </div>
             <p>Spot-check <span id="headerDescLang">German</span> translations paragraph by paragraph with granular sentence and word controls.</p>
         </header>
@@ -247,7 +252,61 @@
             { code: 'hi', name: 'Hindi' }
         ];
 
+        let currentTheme = 'light';
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('wortweaver_theme');
+            if (savedTheme === 'dark' || savedTheme === 'light') {
+                currentTheme = savedTheme;
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                currentTheme = 'dark';
+            } else {
+                currentTheme = 'light';
+            }
+            applyTheme(currentTheme, false);
+
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('wortweaver_theme')) {
+                        currentTheme = e.matches ? 'dark' : 'light';
+                        applyTheme(currentTheme, false);
+                    }
+                });
+            }
+        }
+
+        function applyTheme(theme, showNotification = true) {
+            currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+
+            const iconEl = document.getElementById('themeIcon');
+            const labelEl = document.getElementById('themeLabel');
+            const btnEl = document.getElementById('themeToggleBtn');
+
+            if (theme === 'dark') {
+                if (iconEl) iconEl.textContent = 'light_mode';
+                if (labelEl) labelEl.textContent = 'Light Mode';
+                if (btnEl) btnEl.title = "Switch to Light Mode (Press 'D')";
+            } else {
+                if (iconEl) iconEl.textContent = 'dark_mode';
+                if (labelEl) labelEl.textContent = 'Dark Mode';
+                if (btnEl) btnEl.title = "Switch to Dark Mode (Press 'D')";
+            }
+
+            if (showNotification) {
+                const modeName = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
+                showToast(`Switched to ${modeName}`);
+            }
+        }
+
+        function toggleTheme() {
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('wortweaver_theme', newTheme);
+            applyTheme(newTheme, true);
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
             await loadSupportedLanguages();
             await fetchInstalledPackages();
         });
@@ -385,7 +444,7 @@
             }
         }
 
-        // Keyboard Shortcuts for Mode Switch & Save ('s' for sentence mode, 'w' for word mode, 't' for hover translation, Ctrl+S / Cmd+S for saving)
+        // Keyboard Shortcuts for Mode Switch & Save ('s' for sentence mode, 'w' for word mode, 't' for hover translation, 'd' for theme toggle, Ctrl+S / Cmd+S for saving)
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault();
@@ -411,6 +470,8 @@
                 toggleWordMode();
             } else if (key === 't') {
                 toggleHoverTranslation();
+            } else if (key === 'd') {
+                toggleTheme();
             }
         });
 
