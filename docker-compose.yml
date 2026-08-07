@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: wortweaver
     ports:
-      - "5000:5000"
+      - "${PORT:-5000}:5000"
     volumes:
       - argos_data:/home/appuser/.local/share/argos-translate
     restart: unless-stopped
