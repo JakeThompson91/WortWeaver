@@ -101,58 +101,86 @@ Open your browser and navigate to **`http://127.0.0.1:5000`**.
 
 ## 🐳 Docker Setup
 
+The Docker image runs WörtWeaver on **Python 3.11** with **Gunicorn** as a non-root user, pre-downloads the default **German ➔ English** translation model during build, and persists any additional language models in a named Docker volume (`/home/appuser/.local/share/argos-translate`).
+
+### Prerequisites
+- Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS/Windows) or Docker Engine with the Compose plugin (Linux).
+- Clone the repository and navigate into the project directory:
+```bash
+git clone https://github.com/JakeThompson91/WortWeaver.git
+cd WortWeaver
+```
+
 ### Option 1: Docker Compose (Recommended)
 ```bash
-# Build image and start WörtWeaver container in detached mode
-docker compose up -d
+# 1. Build the image and start WörtWeaver in detached mode
+docker compose up -d --build
 
-# View server logs
+# 2. Check container status & healthcheck
+docker compose ps
+
+# 3. View server logs
 docker compose logs -f
 
-# Stop container
+# 4. Stop and remove the container (preserves downloaded language models)
 docker compose down
+
+# (Optional) Stop container AND delete the persisted translation model volume
+docker compose down -v
 ```
+
+> **Custom Port:** By default, WörtWeaver binds to port `5000`. To expose a different host port, set the `PORT` environment variable:
+> ```bash
+> PORT=8080 docker compose up -d
+> ```
 
 ### Option 2: Docker CLI
 ```bash
-# Build Docker image
+# 1. Build the Docker image
 docker build -t wortweaver:latest .
 
-# Run container with persistent translation volume
+# 2. Run the container with a persistent translation model volume
 docker run -d \
   --name wortweaver \
   -p 5000:5000 \
   -v wortweaver_argos_data:/home/appuser/.local/share/argos-translate \
   --restart unless-stopped \
   wortweaver:latest
+
+# 3. Check container health and logs
+docker ps
+docker logs -f wortweaver
+
+# 4. Stop and remove the container
+docker stop wortweaver && docker rm wortweaver
 ```
 
-Open your browser and navigate to **`http://localhost:5000`**.
+Open your browser and navigate to **`http://localhost:5000`** (or your custom `PORT`).
 
 ---
 
-### 🔄 Updating Docker After Code Changes
+### 🔄 Updating Docker After Code or Dependency Changes
 
-When you pull updates from Git or modify codebase files, rebuild and restart the Docker container:
+When you pull updates from Git, modify application files, or update `requirements.txt`, rebuild and restart the container:
 
 #### With Docker Compose:
 ```bash
-# Rebuild image with updated code and restart in detached mode
+# Rebuild image with updated code/dependencies and restart in detached mode
 docker compose up -d --build
 
-# (Optional) Force a clean rebuild without build cache:
+# (Optional) Force a clean rebuild without build cache
 docker compose build --no-cache && docker compose up -d
 ```
 
 #### With Docker CLI:
 ```bash
-# 1. Stop and remove existing container
+# 1. Stop and remove the existing container
 docker stop wortweaver && docker rm wortweaver
 
-# 2. Rebuild Docker image with latest code
+# 2. Rebuild the Docker image with the latest code/dependencies
 docker build -t wortweaver:latest .
 
-# 3. Restart container (persistent translation packages in volume are preserved)
+# 3. Restart the container (persistent translation packages in volume are preserved)
 docker run -d \
   --name wortweaver \
   -p 5000:5000 \
